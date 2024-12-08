@@ -1,6 +1,6 @@
 # Erabook Flutter App
 
-**Erabook** is a feature-rich ebook store and reader application built using Flutter. It provides a delightful user experience for discovering, purchasing, and reading ebooks. The app is responsive across mobile and desktop screens and includes a modern, intuitive design.
+**Erabook** is a Freelance project for Zakaria.
 
 ## Features
 
