@@ -1,0 +1,5464 @@
+﻿
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\main.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'utils/constants.dart';
+import 'utils/routes.dart';
+import 'screens/onboarding/splash_screen.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Set preferred orientations
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  // Set system overlay style
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
+
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Erabook',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primaryColor: AppColors.primary,
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
+          iconTheme: IconThemeData(color: Colors.black),
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        textTheme: GoogleFonts.interTextTheme(
+          Theme.of(context).textTheme,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 52),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.black87,
+            side: BorderSide(color: Colors.grey.shade300),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            textStyle: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+          border: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
+          ),
+          errorBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.red, width: 2),
+          ),
+          hintStyle: TextStyle(
+            color: Colors.grey.shade400,
+            fontSize: 16,
+          ),
+        ),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          primary: AppColors.primary,
+          secondary: AppColors.primary,
+        ),
+      ),
+      home: const SplashScreen(),
+      onGenerateRoute: AppRouter.onGenerateRoute,
+      navigatorKey: AppRouter.navigatorKey,
+    );
+  }
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\models\book.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\models\review.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\models\user.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\providers\auth_provider.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\providers\book_provider.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\account\profile_screen.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\account\settings_screen.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\auth\create_new_password_screen.dart
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../utils/constants.dart'; // Ensure AppColors and other utils are accessible
+import '../home/home_screen.dart'; // Import the HomeScreen
+
+class CreateNewPasswordScreen extends StatefulWidget {
+  const CreateNewPasswordScreen({Key? key}) : super(key: key);
+
+  @override
+  State<CreateNewPasswordScreen> createState() => _CreateNewPasswordScreenState();
+}
+
+class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
+  final TextEditingController _passwordController = TextEditingController(text: 'password123');
+  final TextEditingController _confirmPasswordController = TextEditingController(text: 'password123');
+
+  bool _passwordVisible = false;
+  bool _confirmPasswordVisible = false;
+  bool _rememberMe = true;
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _onContinue() {
+    // After setting the new password successfully, show the success dialog
+    _showResetSuccessDialog();
+  }
+
+  void _showResetSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.4), // Dark overlay
+      barrierDismissible: false,
+      builder: (context) {
+        return Stack(
+          children: [
+            // Apply blur effect over entire screen
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                child: Container(
+                  color: Colors.black.withOpacity(0.1),
+                ),
+              ),
+            ),
+            Center(
+              child: Container(
+                width: 300,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icon in a colored circle
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.check,
+                          color: AppColors.primary,
+                          size: 40,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Reset Password\nSuccessful!',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.urbanist(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Your password has been successfully\nchanged.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.urbanist(
+                        fontSize: 14,
+                        color: Colors.black87,
+                        height: 1.5,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context); // Close the dialog
+                        // Navigate to HomeScreen
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const HomeScreen()),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                        minimumSize: const Size(double.infinity, 56),
+                      ),
+                      child: Text(
+                        'Go to Home',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildBackButton(BuildContext context) {
+    return Container(
+      height: 40,
+      width: 40,
+      margin: const EdgeInsets.only(left: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+        color: Colors.black87,
+        onPressed: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return RichText(
+      text: TextSpan(
+        style: GoogleFonts.urbanist(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+          decoration: TextDecoration.none,
+        ),
+        children: const [
+          TextSpan(text: 'Create New Password '),
+          TextSpan(text: 'ðŸ”'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubtitle() {
+    return Text(
+      "Enter your new password. If you forget it, then you have to do forgot password.",
+      style: GoogleFonts.urbanist(
+        fontSize: 14,
+        color: Colors.black54,
+        height: 1.5,
+        decoration: TextDecoration.none,
+      ),
+    );
+  }
+
+  Widget _buildTextFieldLabel(String label) {
+    return Text(
+      label,
+      style: GoogleFonts.urbanist(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: Colors.black87,
+        decoration: TextDecoration.none,
+      ),
+    );
+  }
+
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required bool visible,
+    required VoidCallback onToggle,
+    String hintText = 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          obscureText: !visible,
+          style: GoogleFonts.urbanist(
+            fontSize: 16,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+            decoration: TextDecoration.none,
+          ),
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 16,
+              decoration: TextDecoration.none,
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                visible ? Icons.visibility : Icons.visibility_off,
+                color: AppColors.primary,
+              ),
+              onPressed: onToggle,
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRememberMeCheckbox() {
+    return Row(
+      children: [
+        InkWell(
+          onTap: () => setState(() => _rememberMe = !_rememberMe),
+          borderRadius: BorderRadius.circular(4),
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: _rememberMe ? AppColors.primary : Colors.white,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: _rememberMe ? AppColors.primary : Colors.grey.shade400,
+                width: 2,
+              ),
+            ),
+            child: _rememberMe
+                ? const Icon(Icons.check, color: Colors.white, size: 18)
+                : null,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          'Remember me',
+          style: GoogleFonts.urbanist(
+            color: Colors.black87,
+            fontSize: 14,
+            decoration: TextDecoration.none,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContinueButton() {
+    return ElevatedButton(
+      onPressed: _onContinue,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        minimumSize: const Size(double.infinity, 56),
+      ),
+      child: Text(
+        'Continue',
+        style: GoogleFonts.urbanist(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          decoration: TextDecoration.none,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: _buildBackButton(context),
+        centerTitle: false,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 8),
+              _buildSubtitle(),
+              const SizedBox(height: 32),
+
+              // Password field
+              _buildTextFieldLabel("Password"),
+              _buildPasswordField(
+                controller: _passwordController,
+                visible: _passwordVisible,
+                onToggle: () => setState(() => _passwordVisible = !_passwordVisible),
+              ),
+              const SizedBox(height: 16),
+
+              // Confirm Password field
+              _buildTextFieldLabel("Confirm Password"),
+              _buildPasswordField(
+                controller: _confirmPasswordController,
+                visible: _confirmPasswordVisible,
+                onToggle: () => setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
+              ),
+              const SizedBox(height: 16),
+
+              _buildRememberMeCheckbox(),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          bottom: MediaQuery.of(context).padding.bottom + 24,
+          top: 16,
+        ),
+        child: _buildContinueButton(),
+      ),
+    );
+  }
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\auth\forgot_password_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../utils/constants.dart'; // Ensure AppColors and other utils are accessible
+import 'otp_screen.dart'; // Import the OTP screen
+
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({Key? key}) : super(key: key);
+
+  @override
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+}
+
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final TextEditingController _emailController =
+      TextEditingController(text: 'andrew.ainsley@yourdomain.com');
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  void _onContinue() {
+    // Navigate to OtpScreen when "Continue" is clicked
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const OtpScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: _buildBackButton(context),
+        centerTitle: false,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 8),
+              _buildSubtitle(),
+              const SizedBox(height: 32),
+              _buildTextFieldLabel("Email"),
+              _buildEmailField(),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          bottom: MediaQuery.of(context).padding.bottom + 24,
+          top: 16,
+        ),
+        child: _buildContinueButton(),
+      ),
+    );
+  }
+
+  Widget _buildBackButton(BuildContext context) {
+    return Container(
+      height: 40,
+      width: 40,
+      margin: const EdgeInsets.only(left: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+        color: Colors.black87,
+        onPressed: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return RichText(
+      text: TextSpan(
+        style: GoogleFonts.urbanist(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+          decoration: TextDecoration.none,
+        ),
+        children: const [
+          TextSpan(text: 'Forgot Password '),
+          TextSpan(text: 'ðŸ”‘'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubtitle() {
+    return Text(
+      "Enter your email address. We will send an OTP code for verification in the next step.",
+      style: GoogleFonts.urbanist(
+        fontSize: 14,
+        color: Colors.black54,
+        height: 1.5,
+        decoration: TextDecoration.none,
+      ),
+    );
+  }
+
+  Widget _buildTextFieldLabel(String label) {
+    return Text(
+      label,
+      style: GoogleFonts.urbanist(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: Colors.black87,
+        decoration: TextDecoration.none,
+      ),
+    );
+  }
+
+  Widget _buildEmailField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _emailController,
+          style: GoogleFonts.urbanist(
+            fontSize: 16,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+            decoration: TextDecoration.none,
+          ),
+          keyboardType: TextInputType.emailAddress,
+          decoration: InputDecoration(
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContinueButton() {
+    return ElevatedButton(
+      onPressed: _onContinue,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        minimumSize: const Size(double.infinity, 56),
+      ),
+      child: Text(
+        'Continue',
+        style: GoogleFonts.urbanist(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          decoration: TextDecoration.none,
+        ),
+      ),
+    );
+  }
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\auth\otp_screen.dart
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../utils/constants.dart'; // Ensure AppColors and other utilities are accessible
+import 'create_new_password_screen.dart'; // Import the create new password screen
+
+class OtpScreen extends StatefulWidget {
+  const OtpScreen({Key? key}) : super(key: key);
+
+  @override
+  State<OtpScreen> createState() => _OtpScreenState();
+}
+
+class _OtpScreenState extends State<OtpScreen> {
+  // Controllers for OTP fields
+  final List<TextEditingController> _otpControllers = List.generate(4, (_) => TextEditingController());
+  
+  // Timer logic (for resend)
+  int _secondsRemaining = 55; 
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_secondsRemaining > 0) {
+        setState(() {
+          _secondsRemaining--;
+        });
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _otpControllers) {
+      controller.dispose();
+    }
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _onConfirm() {
+    // After verifying OTP, navigate to create new password screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CreateNewPasswordScreen()),
+    );
+  }
+
+  Widget _buildBackButton(BuildContext context) {
+    return Container(
+      height: 40,
+      width: 40,
+      margin: const EdgeInsets.only(left: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+        color: Colors.black87,
+        onPressed: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return RichText(
+      text: TextSpan(
+        style: GoogleFonts.urbanist(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+          decoration: TextDecoration.none,
+        ),
+        children: const [
+          TextSpan(text: "You've Got Mail "),
+          TextSpan(text: 'âœ‰ï¸'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubtitle() {
+    return Text(
+      "We have sent the OTP verification code to your email address. Check your email and enter the code below.",
+      style: GoogleFonts.urbanist(
+        fontSize: 14,
+        color: Colors.black54,
+        height: 1.5,
+        decoration: TextDecoration.none,
+      ),
+    );
+  }
+
+  Widget _buildOtpFields() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(4, (index) {
+        return Container(
+          width: 50,
+          margin: EdgeInsets.only(right: index != 3 ? 16 : 0),
+          child: TextFormField(
+            controller: _otpControllers[index],
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.urbanist(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              decoration: TextDecoration.none,
+            ),
+            maxLength: 1,
+            decoration: InputDecoration(
+              counterText: '',
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: index == _focusedIndex ? AppColors.primary : Colors.grey.shade300, width: 2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: AppColors.primary, width: 2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            onChanged: (value) {
+              if (value.isNotEmpty && index < 3) {
+                FocusScope.of(context).nextFocus();
+              } else if (value.isEmpty && index > 0) {
+                FocusScope.of(context).previousFocus();
+              }
+            },
+          ),
+        );
+      }),
+    );
+  }
+
+  int get _focusedIndex {
+    for (int i = 0; i < _otpControllers.length; i++) {
+      if (_otpControllers[i].text.isEmpty) return i;
+    }
+    return _otpControllers.length - 1; 
+  }
+
+  Widget _buildResendInfo() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center, // Center text horizontally
+      children: [
+        Text(
+          "Didn't receive email?",
+          style: GoogleFonts.urbanist(
+            fontSize: 14,
+            color: Colors.black87,
+            decoration: TextDecoration.none,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _secondsRemaining > 0 
+            ? "You can resend code in $_secondsRemaining s"
+            : "You can resend the code now",
+          style: GoogleFonts.urbanist(
+            fontSize: 14,
+            color: AppColors.primary,
+            fontWeight: FontWeight.w600,
+            decoration: TextDecoration.none,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildConfirmButton() {
+    return ElevatedButton(
+      onPressed: _onConfirm,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        minimumSize: const Size(double.infinity, 56),
+      ),
+      child: Text(
+        'Confirm',
+        style: GoogleFonts.urbanist(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          decoration: TextDecoration.none,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: _buildBackButton(context),
+        centerTitle: false,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 8),
+              _buildSubtitle(),
+              const SizedBox(height: 32),
+              Center(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildOtpFields(),
+                    const SizedBox(height: 24),
+                    _buildResendInfo(),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+              _buildConfirmButton(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\auth\signin_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../utils/constants.dart'; // For AppColors, etc.
+import 'forgot_password_screen.dart'; // Import the ForgotPasswordScreen
+
+class SignInScreen extends StatefulWidget {
+  const SignInScreen({Key? key}) : super(key: key);
+
+  @override
+  State<SignInScreen> createState() => _SignInScreenState();
+}
+
+class _SignInScreenState extends State<SignInScreen> {
+  final TextEditingController _usernameEmailController = TextEditingController(text: 'andrew.ainsley@yourdomain.com');
+  final TextEditingController _passwordController = TextEditingController(text: 'password123');
+
+  bool _rememberMe = true;
+  bool _passwordVisible = false;
+
+  @override
+  void dispose() {
+    _usernameEmailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _onForgotPassword() {
+    // Navigate to ForgotPasswordScreen when clicked
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: _buildBackButton(context),
+        centerTitle: false,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 8),
+              _buildSubtitle(),
+              const SizedBox(height: 32),
+
+              // Username/Email field
+              _buildTextFieldLabel("Username / Email"),
+              _buildReadOnlyField(_usernameEmailController),
+              const SizedBox(height: 16),
+
+              // Password field
+              _buildTextFieldLabel("Password"),
+              _buildPasswordField(_passwordController),
+              const SizedBox(height: 16),
+
+              // Remember Me checkbox
+              _buildRememberMeCheckbox(),
+              const SizedBox(height: 16),
+
+              // Forgot Password
+              Center(
+                child: TextButton(
+                  onPressed: _onForgotPassword, // Navigate to ForgotPasswordScreen
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                  ),
+                  child: Text(
+                    "Forgot Password",
+                    style: GoogleFonts.urbanist(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Continue with divider
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      "or continue with",
+                      style: GoogleFonts.urbanist(
+                        fontSize: 14,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w500,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Social buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildSocialButton('assets/icons/google.png', onPressed: () {}),
+                  const SizedBox(width: 16),
+                  _buildSocialButton('assets/icons/apple.png', onPressed: () {}),
+                  const SizedBox(width: 16),
+                  _buildSocialButton('assets/icons/facebook.png', onPressed: () {}),
+                ],
+              ),
+              const SizedBox(height: 40),
+
+              // Sign In button
+              _buildSignInButton(),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackButton(BuildContext context) {
+    return Container(
+      height: 40,
+      width: 40,
+      margin: const EdgeInsets.only(left: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+        color: Colors.black87,
+        onPressed: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return RichText(
+      text: TextSpan(
+        style: GoogleFonts.urbanist(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+          decoration: TextDecoration.none,
+        ),
+        children: const [
+          TextSpan(text: 'Hello there '),
+          TextSpan(text: 'ðŸ‘‹'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubtitle() {
+    return Text(
+      "Please enter your username/email and password to sign in.",
+      style: GoogleFonts.urbanist(
+        fontSize: 14,
+        color: Colors.black54,
+        height: 1.5,
+        decoration: TextDecoration.none,
+      ),
+    );
+  }
+
+  Widget _buildTextFieldLabel(String label) {
+    return Text(
+      label,
+      style: GoogleFonts.urbanist(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: Colors.black87,
+        decoration: TextDecoration.none,
+      ),
+    );
+  }
+
+  Widget _buildReadOnlyField(TextEditingController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          style: GoogleFonts.urbanist(
+            fontSize: 16,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+            decoration: TextDecoration.none,
+          ),
+          decoration: InputDecoration(
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordField(TextEditingController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          obscureText: !_passwordVisible,
+          style: GoogleFonts.urbanist(
+            fontSize: 16,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+            decoration: TextDecoration.none,
+          ),
+          decoration: InputDecoration(
+            hintText: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+            hintStyle: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 16,
+              decoration: TextDecoration.none,
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                color: AppColors.primary,
+              ),
+              onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRememberMeCheckbox() {
+    return Row(
+      children: [
+        InkWell(
+          onTap: () => setState(() => _rememberMe = !_rememberMe),
+          borderRadius: BorderRadius.circular(4),
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: _rememberMe ? AppColors.primary : Colors.white,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: _rememberMe ? AppColors.primary : Colors.grey.shade400,
+                width: 2,
+              ),
+            ),
+            child: _rememberMe
+                ? const Icon(Icons.check, color: Colors.white, size: 18)
+                : null,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          'Remember me',
+          style: GoogleFonts.urbanist(
+            color: Colors.black87,
+            fontSize: 14,
+            decoration: TextDecoration.none,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSocialButton(String iconPath, {required VoidCallback onPressed}) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 48,
+        height: 48,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Image.asset(iconPath),
+      ),
+    );
+  }
+
+  Widget _buildSignInButton() {
+    return ElevatedButton(
+      onPressed: () {
+        // TODO: Implement sign in logic
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        minimumSize: const Size(double.infinity, 56),
+      ),
+      child: Text(
+        'Sign In',
+        style: GoogleFonts.urbanist(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          decoration: TextDecoration.none,
+        ),
+      ),
+    );
+  }
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\book\book_details_screen.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\book\purchase_screen.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\book\reader_screen.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\discover\discover_screen.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\discover\search_screen.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\home\home_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../utils/constants.dart'; // Ensure AppColors and other utilities are accessible
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0; // For bottom navigation
+
+  @override
+  void initState() {
+    super.initState();
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+  }
+
+  void _onBottomNavTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    // TODO: Implement navigation logic for each bottom nav item if needed
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 800;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: _buildAppBar(),
+      body: SafeArea(
+        child: isDesktop ? _buildDesktopLayout(context) : _buildMobileLayout(context),
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      titleSpacing: 24,
+      title: Text(
+        "Erabook",
+        style: GoogleFonts.urbanist(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+          decoration: TextDecoration.none,
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.search, color: Colors.black87),
+          onPressed: () {
+            // TODO: Implement search navigation
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.notifications_none, color: Colors.black87),
+          onPressed: () {
+            // TODO: Implement notifications navigation
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle("Recommended For You"),
+          const SizedBox(height: 8),
+          _buildHorizontalBookList(recommendedBooks),
+
+          const SizedBox(height: 24),
+          _buildSectionTitle("Explore by Genre"),
+          const SizedBox(height: 8),
+          _buildHorizontalGenreList(genres),
+
+          const SizedBox(height: 24),
+          _buildSectionTitle("On Your Purchased"),
+          const SizedBox(height: 8),
+          _buildHorizontalBookList(purchasedBooks),
+
+          const SizedBox(height: 24),
+          _buildSectionTitle("On Your Wishlist"),
+          const SizedBox(height: 8),
+          _buildHorizontalBookList(wishlistBooks),
+
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(BuildContext context) {
+    // For desktop, let's arrange the layout into two columns:
+    // Left column: Recommended For You, Explore by Genre
+    // Right column: On Your Purchased, On Your Wishlist
+    // We'll display books in a grid instead of horizontal lists and genres in a wrap.
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 5,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionTitle("Recommended For You"),
+                  const SizedBox(height: 8),
+                  _buildGridBookList(recommendedBooks),
+                  const SizedBox(height: 24),
+                  _buildSectionTitle("Explore by Genre"),
+                  const SizedBox(height: 8),
+                  _buildWrapGenreList(genres),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 32),
+          Expanded(
+            flex: 5,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionTitle("On Your Purchased"),
+                  const SizedBox(height: 8),
+                  _buildGridBookList(purchasedBooks),
+                  const SizedBox(height: 24),
+                  _buildSectionTitle("On Your Wishlist"),
+                  const SizedBox(height: 8),
+                  _buildGridBookList(wishlistBooks),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.urbanist(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+            decoration: TextDecoration.none,
+          ),
+        ),
+        const Spacer(),
+        TextButton(
+          onPressed: () {
+            // TODO: Navigate to full list
+          },
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.primary,
+          ),
+          child: Text(
+            "â†’",
+            style: GoogleFonts.urbanist(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+              decoration: TextDecoration.none,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// MOBILE Horizontal Lists
+  Widget _buildHorizontalBookList(List<Book> books) {
+    return SizedBox(
+      height: 250,
+      child: ListView.separated(
+        padding: const EdgeInsets.only(left: 24),
+        scrollDirection: Axis.horizontal,
+        itemCount: books.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 16),
+        itemBuilder: (context, index) {
+          final book = books[index];
+          return _buildBookCard(book, width: 140);
+        },
+      ),
+    );
+  }
+
+  Widget _buildHorizontalGenreList(List<Genre> genres) {
+    return SizedBox(
+      height: 60,
+      child: ListView.separated(
+        padding: const EdgeInsets.only(left: 24),
+        scrollDirection: Axis.horizontal,
+        itemCount: genres.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 16),
+        itemBuilder: (context, index) {
+          final genre = genres[index];
+          return _buildGenreChip(genre);
+        },
+      ),
+    );
+  }
+
+  /// DESKTOP Grid Lists
+  Widget _buildGridBookList(List<Book> books) {
+    // For desktop, let's display books in a responsive grid (e.g., 3 columns).
+    // Adjust crossAxisCount as needed.
+    return GridView.builder(
+      padding: EdgeInsets.zero,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: books.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisExtent: 250, // Control height of each item (book cover + text)
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 24,
+      ),
+      itemBuilder: (context, index) {
+        final book = books[index];
+        return _buildBookCard(book, width: 140);
+      },
+    );
+  }
+
+  Widget _buildWrapGenreList(List<Genre> genres) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 0),
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 16,
+        children: genres.map((genre) => _buildGenreChip(genre)).toList(),
+      ),
+    );
+  }
+
+  Widget _buildBookCard(Book book, {double width = 140}) {
+    return SizedBox(
+      width: width,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Book cover
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset(
+              book.coverUrl,
+              width: width,
+              height: 180,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            book.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.urbanist(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+              decoration: TextDecoration.none,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            book.subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.urbanist(
+              fontSize: 12,
+              color: Colors.black54,
+              decoration: TextDecoration.none,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenreChip(Genre genre) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Text(
+        genre.name,
+        style: GoogleFonts.urbanist(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: AppColors.primary,
+          decoration: TextDecoration.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      currentIndex: _selectedIndex,
+      onTap: _onBottomNavTapped,
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: Colors.white,
+      selectedItemColor: AppColors.primary,
+      unselectedItemColor: Colors.black54,
+      showSelectedLabels: false,
+      showUnselectedLabels: false,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home_rounded),
+          label: 'Home',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.travel_explore_rounded),
+          label: 'Discover',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.favorite_border_rounded),
+          label: 'Wishlist',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.shopping_bag_outlined),
+          label: 'Purchased',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline_rounded),
+          label: 'Account',
+        ),
+      ],
+    );
+  }
+}
+
+// Dummy data classes and sample data
+class Book {
+  final String title;
+  final String subtitle;
+  final String coverUrl;
+  Book({required this.title, required this.subtitle, required this.coverUrl});
+}
+
+class Genre {
+  final String name;
+  Genre(this.name);
+}
+
+// Sample data
+final recommendedBooks = [
+  Book(
+    title: "The House of Hades\n(Heroes of Olympus ...)",
+    subtitle: "4.6  \$7.50",
+    coverUrl: 'assets/images/book1.jpg',
+  ),
+  Book(
+    title: "My Quiet Blacksmith Life\nin Another World...",
+    subtitle: "4.7  \$6.99",
+    coverUrl: 'assets/images/book2.jpg',
+  ),
+  // Add more books as needed
+];
+
+final genres = [
+  Genre("Romance"),
+  Genre("Thriller"),
+  Genre("Inspiration"),
+  Genre("Sci-Fi"),
+  // Add more genres as needed
+];
+
+final purchasedBooks = [
+  Book(
+    title: "Batman: Arkham\nUnhinged Vol. 1",
+    subtitle: "4.3  Purchased",
+    coverUrl: 'assets/images/book3.jpg',
+  ),
+  Book(
+    title: "His Dark Materials:\nThe Golden Compass",
+    subtitle: "4.4  Purchased",
+    coverUrl: 'assets/images/book4.jpg',
+  ),
+  // Add more purchased books as needed
+];
+
+final wishlistBooks = [
+  Book(
+    title: "Fairy Tale",
+    subtitle: "4.9  \$8.99",
+    coverUrl: 'assets/images/book5.jpg',
+  ),
+  Book(
+    title: "The Lost Metal",
+    subtitle: "4.7  \$9.99",
+    coverUrl: 'assets/images/book6.jpg',
+  ),
+  // Add more wishlist books as needed
+];
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\home\menu_screen.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\home\notification_screen.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\onboarding\age_selection_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'book_genre_screen.dart';
+
+class AgeSelectionScreen extends StatefulWidget {
+  const AgeSelectionScreen({Key? key}) : super(key: key);
+
+  @override
+  State<AgeSelectionScreen> createState() => _AgeSelectionScreenState();
+}
+
+class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
+  String? _selectedAge;
+
+  final List<String> ageRanges = [
+    '14 - 17',
+    '18 - 24',
+    '25 - 29',
+    '30 - 34',
+    '35 - 39',
+    '40 - 44',
+    '45 - 49',
+    'â‰¥ 50',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 800;
+
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ));
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Row(
+      children: [
+        Expanded(
+          flex: 5,
+          child: Container(
+            height: screenHeight,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/library.jpg'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerRight,
+                      end: Alignment.centerLeft,
+                      colors: [
+                        Colors.black.withOpacity(0.7),
+                        Colors.black.withOpacity(0.0),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 60,
+                  bottom: 60,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Age-Appropriate\nRecommendations',
+                        style: GoogleFonts.urbanist(
+                          fontSize: screenWidth * 0.035,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'We\'ll suggest books that resonate\nwith your age group.',
+                        style: GoogleFonts.urbanist(
+                          fontSize: screenWidth * 0.012,
+                          color: Colors.white.withOpacity(0.9),
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 4,
+          child: Container(
+            height: screenHeight,
+            color: Colors.white,
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.05,
+                    vertical: 24,
+                  ),
+                  child: Row(
+                    children: [
+                      _buildAnimatedBackButton(context),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildAnimatedProgressBar()),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.05,
+                      vertical: 24,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(),
+                          const SizedBox(height: 40),
+                          _buildAgeGrid(),
+                          const SizedBox(height: 48),
+                          _buildContinueButton(context),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Row(
+            children: [
+              _buildAnimatedBackButton(context),
+              const SizedBox(width: 16),
+              Expanded(child: _buildAnimatedProgressBar()),
+            ],
+          ),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 40),
+                  _buildAgeGrid(),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            bottom: MediaQuery.of(context).padding.bottom + 24,
+            top: 16,
+          ),
+          child: _buildContinueButton(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAnimatedBackButton(BuildContext context) {
+    return Container(
+      height: 40,
+      width: 40,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+        onPressed: () => Navigator.pop(context),
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  Widget _buildAnimatedProgressBar() {
+    return TweenAnimationBuilder(
+      duration: const Duration(milliseconds: 800),
+      tween: Tween<double>(begin: 0, end: 0.4),
+      builder: (context, double value, child) {
+        return Container(
+          height: 12,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Stack(
+            children: [
+              FractionallySizedBox(
+                widthFactor: value,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFF7A00), Color(0xFFFF9D42)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'What is your age?',
+          style: GoogleFonts.urbanist(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Select age range for better content.',
+          style: GoogleFonts.urbanist(
+            fontSize: 16,
+            color: Colors.black54,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAgeGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 2.5,
+      ),
+      itemCount: ageRanges.length,
+      itemBuilder: (context, index) {
+        final ageRange = ageRanges[index];
+        final isSelected = _selectedAge == ageRange;
+
+        return GestureDetector(
+          onTap: () => setState(() => _selectedAge = ageRange),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: isSelected ? const Color(0xFFFF7A00) : Colors.grey.shade300,
+                width: 2,
+              ),
+              color: isSelected ? const Color(0xFFFF7A00).withOpacity(0.1) : Colors.transparent,
+            ),
+            child: Center(
+              child: Text(
+                ageRange,
+                style: GoogleFonts.urbanist(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? const Color(0xFFFF7A00) : Colors.black87,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildContinueButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: _selectedAge == null
+          ? null
+          : () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const BookGenreScreen()),
+              );
+            },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _selectedAge == null ? Colors.grey.shade300 : const Color(0xFFFF7A00),
+        foregroundColor: _selectedAge == null ? Colors.black54 : Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        minimumSize: const Size(double.infinity, 56),
+      ),
+      child: Text(
+        'Continue',
+        style: GoogleFonts.urbanist(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\onboarding\book_genre_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../utils/constants.dart'; // Make sure the path is correct
+import 'complete_profile_screen.dart'; // Import your new screen
+
+class BookGenreScreen extends StatefulWidget {
+  const BookGenreScreen({Key? key}) : super(key: key);
+
+  @override
+  State<BookGenreScreen> createState() => _BookGenreScreenState();
+}
+
+class _BookGenreScreenState extends State<BookGenreScreen> {
+  final List<String> genres = [
+    'Romance',
+    'Fantasy',
+    'Sci-Fi',
+    'Horror',
+    'Mystery',
+    'Thriller',
+    'Psychology',
+    'Inspiration',
+    'Comedy',
+    'Action',
+    'Adventure',
+    'Comics',
+    'Children\'s',
+    'Art & Photography',
+    'Food & Drink',
+    'Biography',
+    'Science & Technology',
+    'Guide / How-to',
+    'Travel',
+  ];
+
+  Set<String> _selectedGenres = {};
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 800;
+
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ));
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Row(
+      children: [
+        Expanded(
+          flex: 5,
+          child: Container(
+            height: screenHeight,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/library.jpg'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerRight,
+                      end: Alignment.centerLeft,
+                      colors: [
+                        Colors.black.withOpacity(0.7),
+                        Colors.black.withOpacity(0.0),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 60,
+                  bottom: 60,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Discover Your\nPerfect Genre',
+                        style: GoogleFonts.urbanist(
+                          fontSize: screenWidth * 0.035,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Select the genres that interest you most\nfor a tailored reading experience.',
+                        style: GoogleFonts.urbanist(
+                          fontSize: screenWidth * 0.012,
+                          color: Colors.white.withOpacity(0.9),
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 4,
+          child: Container(
+            height: screenHeight,
+            color: Colors.white,
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.05,
+                    vertical: 24,
+                  ),
+                  child: Row(
+                    children: [
+                      _buildAnimatedBackButton(context),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildAnimatedProgressBar()),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.05,
+                      vertical: 24,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(),
+                          const SizedBox(height: 40),
+                          _buildGenreGrid(),
+                          const SizedBox(height: 32),
+                          _buildSkipButton(),
+                          const SizedBox(height: 16),
+                          _buildContinueButton(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Row(
+            children: [
+              _buildAnimatedBackButton(context),
+              const SizedBox(width: 16),
+              Expanded(child: _buildAnimatedProgressBar()),
+            ],
+          ),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 40),
+                  _buildGenreGrid(),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            bottom: MediaQuery.of(context).padding.bottom + 24,
+            top: 16,
+          ),
+          child: Column(
+            children: [
+              _buildSkipButton(),
+              const SizedBox(height: 16),
+              _buildContinueButton(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAnimatedBackButton(BuildContext context) {
+    return Container(
+      height: 40,
+      width: 40,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+        onPressed: () => Navigator.pop(context),
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  Widget _buildAnimatedProgressBar() {
+    return TweenAnimationBuilder(
+      duration: const Duration(milliseconds: 800),
+      tween: Tween<double>(begin: 0, end: 0.6),
+      builder: (context, double value, child) {
+        return Container(
+          height: 12,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Stack(
+            children: [
+              FractionallySizedBox(
+                widthFactor: value,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFF7A00), Color(0xFFFF9D42)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader() {
+    return RichText(
+      text: TextSpan(
+        style: GoogleFonts.urbanist(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+        children: const [
+          TextSpan(text: 'Choose the Book Genre\nYou Like '),
+          TextSpan(text: 'â¤ï¸'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenreGrid() {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: genres.map((genre) {
+        final isSelected = _selectedGenres.contains(genre);
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                _selectedGenres.remove(genre);
+              } else {
+                _selectedGenres.add(genre);
+              }
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFFFF7A00) : Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isSelected ? const Color(0xFFFF7A00) : Colors.grey.shade300,
+                width: 2,
+              ),
+            ),
+            child: Text(
+              genre,
+              style: GoogleFonts.urbanist(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : Colors.black87,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildSkipButton() {
+    return TextButton(
+      onPressed: () {
+        // Implement skip action if needed
+        // For example, directly go to the next screen:
+        // Navigator.push(context, MaterialPageRoute(builder: (context) => const CompleteProfileScreen()));
+      },
+      style: TextButton.styleFrom(
+        foregroundColor: const Color(0xFFFF7A00),
+      ),
+      child: Text(
+        'Skip',
+        style: GoogleFonts.urbanist(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContinueButton() {
+    return ElevatedButton(
+      onPressed: _selectedGenres.isNotEmpty
+          ? () {
+              // Navigate to CompleteProfileScreen when continue is clicked
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CompleteProfileScreen()),
+              );
+            }
+          : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _selectedGenres.isNotEmpty ? const Color(0xFFFF7A00) : Colors.grey.shade300,
+        foregroundColor: _selectedGenres.isNotEmpty ? Colors.white : Colors.black54,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        minimumSize: const Size(double.infinity, 56),
+      ),
+      child: Text(
+        'Continue',
+        style: GoogleFonts.urbanist(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\onboarding\complete_profile_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../utils/constants.dart';
+import 'create_account_screen.dart'; // Ensure the path is correct
+
+class CompleteProfileScreen extends StatefulWidget {
+  const CompleteProfileScreen({Key? key}) : super(key: key);
+
+  @override
+  State<CompleteProfileScreen> createState() => _CompleteProfileScreenState();
+}
+
+class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
+  final TextEditingController _fullNameController =
+      TextEditingController(text: "Andrew Ainsley");
+  final TextEditingController _phoneController =
+      TextEditingController(text: "+1-300-555-0399");
+  final TextEditingController _dobController =
+      TextEditingController(text: "12/27/1995");
+  final TextEditingController _countryController =
+      TextEditingController(text: "United States");
+
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _phoneController.dispose();
+    _dobController.dispose();
+    _countryController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 800;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: isDesktop ? _buildDesktopLayout(context) : _buildMobileLayout(),
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Row(
+      children: [
+        // Left side - hero image
+        Expanded(
+          flex: 5,
+          child: Container(
+            height: screenHeight,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/library.jpg'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerRight,
+                      end: Alignment.centerLeft,
+                      colors: [
+                        Colors.black.withOpacity(0.7),
+                        Colors.black.withOpacity(0.0),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 60,
+                  bottom: 60,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Complete\nYour Profile',
+                        style: GoogleFonts.urbanist(
+                          fontSize: screenWidth * 0.035,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Only you can see your personal data.\nNo one else will be able to see it.',
+                        style: GoogleFonts.urbanist(
+                          fontSize: screenWidth * 0.012,
+                          color: Colors.white.withOpacity(0.9),
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Right side - form and content
+        Expanded(
+          flex: 4,
+          child: Container(
+            height: screenHeight,
+            color: Colors.white,
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.05,
+                    vertical: 24,
+                  ),
+                  child: Row(
+                    children: [
+                      _buildBackButton(context),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildProgressBar()),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(),
+                          const SizedBox(height: 16),
+                          _buildSubtitle(),
+                          const SizedBox(height: 32),
+                          _buildProfileImage(),
+                          const SizedBox(height: 32),
+                          _buildTextFieldLabel("Full Name"),
+                          _buildReadOnlyField(_fullNameController),
+                          const SizedBox(height: 16),
+                          _buildTextFieldLabel("Phone Number"),
+                          _buildReadOnlyField(_phoneController),
+                          const SizedBox(height: 16),
+                          _buildTextFieldLabel("Date of Birth"),
+                          _buildReadOnlyField(_dobController, suffixIcon: Icons.calendar_today),
+                          const SizedBox(height: 16),
+                          _buildTextFieldLabel("Country"),
+                          _buildReadOnlyField(_countryController, suffixIcon: Icons.keyboard_arrow_down),
+                          const SizedBox(height: 40),
+                          _buildContinueButton(),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    return Column(
+      children: [
+        // Hero section
+        Expanded(
+          child: Stack(
+            children: [
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/library.jpg'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 300,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withOpacity(0.0),
+                        Colors.white.withOpacity(0.2),
+                        Colors.white.withOpacity(0.6),
+                        Colors.white.withOpacity(0.9),
+                        Colors.white,
+                      ],
+                      stops: const [0.0, 0.3, 0.6, 0.8, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Content below hero
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _buildBackButton(context),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildProgressBar()),
+                  ],
+                ),
+                const SizedBox(height: 48),
+                _buildHeader(),
+                const SizedBox(height: 16),
+                _buildSubtitle(),
+                const SizedBox(height: 32),
+                _buildProfileImage(),
+                const SizedBox(height: 32),
+                _buildTextFieldLabel("Full Name"),
+                _buildReadOnlyField(_fullNameController),
+                const SizedBox(height: 16),
+                _buildTextFieldLabel("Phone Number"),
+                _buildReadOnlyField(_phoneController),
+                const SizedBox(height: 16),
+                _buildTextFieldLabel("Date of Birth"),
+                _buildReadOnlyField(_dobController, suffixIcon: Icons.calendar_today),
+                const SizedBox(height: 16),
+                _buildTextFieldLabel("Country"),
+                _buildReadOnlyField(_countryController, suffixIcon: Icons.keyboard_arrow_down),
+                const SizedBox(height: 40),
+                _buildContinueButton(),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBackButton(BuildContext context) {
+    return Container(
+      height: 40,
+      width: 40,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+        onPressed: () => Navigator.pop(context),
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  Widget _buildProgressBar() {
+    // Using a fixed widthFactor as GenderSelectionScreen does (like 0.4)
+    return Container(
+      height: 12,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Stack(
+        children: [
+          FractionallySizedBox(
+            widthFactor: 0.4,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF7A00), Color(0xFFFF9D42)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return RichText(
+      text: TextSpan(
+        style: GoogleFonts.urbanist(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+        children: const [
+          TextSpan(text: 'Complete Your Profile '),
+          TextSpan(text: 'ðŸ‘©â€ðŸ’»'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubtitle() {
+    return Text(
+      "Don't worry, only you can see your personal data. No one else will be able to see it.",
+      style: GoogleFonts.urbanist(
+        fontSize: 14,
+        color: Colors.black54,
+        height: 1.5,
+      ),
+    );
+  }
+
+  Widget _buildProfileImage() {
+    return Center(
+      child: Stack(
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.grey.shade300),
+              image: const DecorationImage(
+                image: AssetImage('assets/images/profile_placeholder.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF7A00),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: const Icon(
+                Icons.camera_alt,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextFieldLabel(String label) {
+    return Text(
+      label,
+      style: GoogleFonts.urbanist(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  Widget _buildReadOnlyField(TextEditingController controller, {IconData? suffixIcon}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          readOnly: true,
+          style: GoogleFonts.urbanist(
+            fontSize: 16,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: InputDecoration(
+            suffixIcon: suffixIcon != null
+                ? Icon(suffixIcon, color: const Color(0xFFFF7A00), size: 20)
+                : null,
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: const Color(0xFFFF7A00)),
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContinueButton() {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CreateAccountScreen()),
+        );
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFFFF7A00),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        minimumSize: const Size(double.infinity, 56),
+      ),
+      child: Text(
+        'Continue',
+        style: GoogleFonts.urbanist(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\onboarding\create_account_screen.dart
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
+
+import '../../utils/constants.dart'; // Ensure the path is correct
+
+class CreateAccountScreen extends StatefulWidget {
+  const CreateAccountScreen({Key? key}) : super(key: key);
+
+  @override
+  State<CreateAccountScreen> createState() => _CreateAccountScreenState();
+}
+
+class _CreateAccountScreenState extends State<CreateAccountScreen> {
+  final _usernameController = TextEditingController(text: 'andrew_ainsley');
+  final _emailController = TextEditingController(text: 'andrew.ainsley@yourdomain.com');
+  final _passwordController = TextEditingController(text: 'password123');
+  final _confirmPasswordController = TextEditingController(text: 'password123');
+
+  bool _passwordVisible = false;
+  bool _confirmPasswordVisible = false;
+  bool _rememberMe = true;
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _onSignUp() {
+    // Perform signup logic here
+    // After successful sign up:
+    _showSignUpSuccessDialog();
+  }
+
+  void _showSignUpSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.4), // Dark overlay
+      barrierDismissible: false,
+      builder: (context) {
+        return Stack(
+          children: [
+            // Apply blur effect over entire screen
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                child: Container(
+                  color: Colors.black.withOpacity(0.1),
+                ),
+              ),
+            ),
+            Center(
+              child: Container(
+                width: 300,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icon in a colored circle
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.person,
+                          color: AppColors.primary,
+                          size: 40,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Sign Up Successful!',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.urbanist(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                        decoration: TextDecoration.none, // No underline
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Your account has been created.\nPlease wait a moment, we are preparing for you...',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.urbanist(
+                        fontSize: 14,
+                        color: Colors.black87,
+                        height: 1.5,
+                        decoration: TextDecoration.none, // No underline
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Lottie animation for loading
+                    Lottie.asset(
+                      'assets/animations/loading.json',
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.contain,
+                      repeat: true,
+                      animate: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    // Simulate a delay before closing the dialog or navigating away
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.of(context).pop(); // Close the dialog
+      // Navigate to the next screen or home
+      // Navigator.pushReplacementNamed(context, '/home');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 800;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: isDesktop ? _buildDesktopLayout(context) : _buildMobileLayout(context),
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Row(
+      children: [
+        // Left side - Hero image
+        Expanded(
+          flex: 5,
+          child: Container(
+            height: screenHeight,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/library.jpg'), // Update path if needed
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerRight,
+                      end: Alignment.centerLeft,
+                      colors: [
+                        Colors.black.withOpacity(0.7),
+                        Colors.black.withOpacity(0.0),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 60,
+                  bottom: 60,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Create\nYour Account',
+                        style: GoogleFonts.urbanist(
+                          fontSize: screenWidth * 0.035,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          height: 1.2,
+                          decoration: TextDecoration.none, // No underline
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Enter your details to get started.\nIf you forget it, then you have to do forgot password.',
+                        style: GoogleFonts.urbanist(
+                          fontSize: screenWidth * 0.012,
+                          color: Colors.white.withOpacity(0.9),
+                          height: 1.5,
+                          decoration: TextDecoration.none, // No underline
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Right side - Form
+        Expanded(
+          flex: 4,
+          child: Container(
+            height: screenHeight,
+            color: Colors.white,
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.05,
+                    vertical: 24,
+                  ),
+                  child: Row(
+                    children: [
+                      _buildBackButton(context),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildProgressBar()),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(),
+                          const SizedBox(height: 12),
+                          _buildSubtitle(),
+                          const SizedBox(height: 32),
+                          _buildTextFieldLabel("Username"),
+                          _buildReadOnlyField(_usernameController),
+                          const SizedBox(height: 16),
+                          _buildTextFieldLabel("Email"),
+                          _buildReadOnlyField(_emailController),
+                          const SizedBox(height: 16),
+                          _buildTextFieldLabel("Password"),
+                          _buildPasswordField(
+                            controller: _passwordController,
+                            visible: _passwordVisible,
+                            onToggle: () => setState(() => _passwordVisible = !_passwordVisible),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextFieldLabel("Confirm Password"),
+                          _buildPasswordField(
+                            controller: _confirmPasswordController,
+                            visible: _confirmPasswordVisible,
+                            onToggle: () => setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildRememberMeCheckbox(),
+                          const SizedBox(height: 40),
+                          _buildSignUpButton(),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        // Hero section
+        Expanded(
+          child: Stack(
+            children: [
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/library.jpg'), // Update path if needed
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 300,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withOpacity(0.0),
+                        Colors.white.withOpacity(0.2),
+                        Colors.white.withOpacity(0.6),
+                        Colors.white.withOpacity(0.9),
+                        Colors.white,
+                      ],
+                      stops: const [0.0, 0.3, 0.6, 0.8, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Content below hero
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _buildBackButton(context),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildProgressBar()),
+                  ],
+                ),
+                const SizedBox(height: 48),
+                _buildHeader(),
+                const SizedBox(height: 12),
+                _buildSubtitle(),
+                const SizedBox(height: 32),
+                _buildTextFieldLabel("Username"),
+                _buildReadOnlyField(_usernameController),
+                const SizedBox(height: 16),
+                _buildTextFieldLabel("Email"),
+                _buildReadOnlyField(_emailController),
+                const SizedBox(height: 16),
+                _buildTextFieldLabel("Password"),
+                _buildPasswordField(
+                  controller: _passwordController,
+                  visible: _passwordVisible,
+                  onToggle: () => setState(() => _passwordVisible = !_passwordVisible),
+                ),
+                const SizedBox(height: 16),
+                _buildTextFieldLabel("Confirm Password"),
+                _buildPasswordField(
+                  controller: _confirmPasswordController,
+                  visible: _confirmPasswordVisible,
+                  onToggle: () => setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
+                ),
+                const SizedBox(height: 16),
+                _buildRememberMeCheckbox(),
+                const SizedBox(height: 40),
+                _buildSignUpButton(),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBackButton(BuildContext context) {
+    return Container(
+      height: 40,
+      width: 40,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+        color: Colors.black87,
+        onPressed: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  Widget _buildProgressBar() {
+    return Container(
+      height: 12,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Stack(
+        children: [
+          FractionallySizedBox(
+            widthFactor: 0.8, // Progress - adjust as needed
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF7A00), Color(0xFFFF9D42)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return RichText(
+      text: TextSpan(
+        style: GoogleFonts.urbanist(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+          decoration: TextDecoration.none, // No underline
+        ),
+        children: const [
+          TextSpan(text: 'Create an Account '),
+          TextSpan(text: 'ðŸ”’'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubtitle() {
+    return Text(
+      'Enter your username, email & password. If you forget it, then you have to do forgot password.',
+      style: GoogleFonts.urbanist(
+        fontSize: 14,
+        color: Colors.black54,
+        height: 1.5,
+        decoration: TextDecoration.none, // No underline
+      ),
+    );
+  }
+
+  Widget _buildTextFieldLabel(String label) {
+    return Text(
+      label,
+      style: GoogleFonts.urbanist(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: Colors.black87,
+        decoration: TextDecoration.none, // No underline
+      ),
+    );
+  }
+
+  Widget _buildReadOnlyField(TextEditingController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          readOnly: true,
+          style: GoogleFonts.urbanist(
+            fontSize: 16,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+            decoration: TextDecoration.none, // No underline
+          ),
+          decoration: InputDecoration(
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required bool visible,
+    required VoidCallback onToggle,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          obscureText: !visible,
+          style: GoogleFonts.urbanist(
+            fontSize: 16,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+            decoration: TextDecoration.none, // No underline
+          ),
+          decoration: InputDecoration(
+            hintText: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+            hintStyle: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 16,
+              decoration: TextDecoration.none, // No underline
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                visible ? Icons.visibility : Icons.visibility_off,
+                color: AppColors.primary,
+              ),
+              onPressed: onToggle,
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRememberMeCheckbox() {
+    return Row(
+      children: [
+        InkWell(
+          onTap: () => setState(() => _rememberMe = !_rememberMe),
+          borderRadius: BorderRadius.circular(4),
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: _rememberMe ? AppColors.primary : Colors.white,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: _rememberMe ? AppColors.primary : Colors.grey.shade400,
+                width: 2,
+              ),
+            ),
+            child: _rememberMe
+                ? const Icon(Icons.check, color: Colors.white, size: 18)
+                : null,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          'Remember me',
+          style: GoogleFonts.urbanist(
+            color: Colors.black87,
+            fontSize: 14,
+            decoration: TextDecoration.none, // No underline
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSignUpButton() {
+    return ElevatedButton(
+      onPressed: _onSignUp,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        minimumSize: const Size(double.infinity, 56),
+      ),
+      child: Text(
+        'Sign Up',
+        style: GoogleFonts.urbanist(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          decoration: TextDecoration.none, // No underline
+        ),
+      ),
+    );
+  }
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\onboarding\gender_selection_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'age_selection_screen.dart';
+
+class GenderSelectionScreen extends StatefulWidget {
+  const GenderSelectionScreen({Key? key}) : super(key: key);
+
+  @override
+  State<GenderSelectionScreen> createState() => _GenderSelectionScreenState();
+}
+
+class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
+  String? _selectedGender;
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 800;
+
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ));
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(context),
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Row(
+      children: [
+        Expanded(
+          flex: 5,
+          child: Container(
+            height: screenHeight,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/library.jpg'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerRight,
+                      end: Alignment.centerLeft,
+                      colors: [
+                        Colors.black.withOpacity(0.7),
+                        Colors.black.withOpacity(0.0),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 60,
+                  bottom: 60,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Tell Us About\nYourself',
+                        style: GoogleFonts.urbanist(
+                          fontSize: screenWidth * 0.035,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Help us personalize your reading experience\nby sharing a bit about yourself.',
+                        style: GoogleFonts.urbanist(
+                          fontSize: screenWidth * 0.012,
+                          color: Colors.white.withOpacity(0.9),
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 4,
+          child: Container(
+            height: screenHeight,
+            color: Colors.white,
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.05,
+              vertical: screenHeight * 0.1,
+            ),
+            child: SingleChildScrollView(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 500),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        _buildAnimatedBackButton(context),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildAnimatedProgressBar()),
+                      ],
+                    ),
+                    const SizedBox(height: 48),
+                    _buildHeader(),
+                    const SizedBox(height: 40),
+                    ..._buildGenderOptions(),
+                    const SizedBox(height: 48),
+                    _buildContinueButton(context),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        // Top hero section with image and gradient
+        Expanded(
+          child: Stack(
+            children: [
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/library.jpg'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 300,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withOpacity(0.0),
+                        Colors.white.withOpacity(0.2),
+                        Colors.white.withOpacity(0.6),
+                        Colors.white.withOpacity(0.9),
+                        Colors.white,
+                      ],
+                      stops: const [0.0, 0.3, 0.6, 0.8, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Bottom content container with similar padding structure as WalkthroughScreen
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _buildAnimatedBackButton(context),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildAnimatedProgressBar()),
+                  ],
+                ),
+                const SizedBox(height: 48),
+                _buildHeader(),
+                const SizedBox(height: 40),
+                ..._buildGenderOptions(),
+                const SizedBox(height: 48),
+                _buildContinueButton(context),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAnimatedBackButton(BuildContext context) {
+    return Container(
+      height: 40,
+      width: 40,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+        onPressed: () => Navigator.pop(context),
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  Widget _buildAnimatedProgressBar() {
+    return TweenAnimationBuilder(
+      duration: const Duration(milliseconds: 800),
+      tween: Tween<double>(begin: 0, end: 0.2),
+      builder: (context, double value, child) {
+        return Container(
+          height: 12,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Stack(
+            children: [
+              FractionallySizedBox(
+                widthFactor: value,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFF7A00), Color(0xFFFF9D42)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'What is your gender?',
+          style: GoogleFonts.urbanist(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Select gender for better content.',
+          style: GoogleFonts.urbanist(
+            fontSize: 16,
+            color: Colors.black54,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildGenderOptions() {
+    final options = [
+      {'title': 'I am male', 'value': 'male', 'icon': 'ðŸ‘¨'},
+      {'title': 'I am female', 'value': 'female', 'icon': 'ðŸ‘©'},
+      {'title': 'Rather not to say', 'value': 'none', 'icon': 'ðŸ¤'},
+    ];
+
+    return options.map((option) {
+      final bool isSelected = _selectedGender == option['value'];
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          child: InkWell(
+            onTap: () => setState(() => _selectedGender = option['value'] as String),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFFFF7A00).withOpacity(0.1) : Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected ? const Color(0xFFFF7A00) : Colors.grey.shade300,
+                  width: 2,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    option['icon'] as String,
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    option['title'] as String,
+                    style: GoogleFonts.urbanist(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? const Color(0xFFFF7A00) : Colors.black87,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (isSelected)
+                    const Icon(
+                      Icons.check_circle,
+                      color: Color(0xFFFF7A00),
+                      size: 24,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
+
+  Widget _buildContinueButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: _selectedGender == null
+          ? null
+          : () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AgeSelectionScreen()),
+              );
+            },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _selectedGender == null ? Colors.grey.shade300 : const Color(0xFFFF7A00),
+        foregroundColor: _selectedGender == null ? Colors.black54 : Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        minimumSize: const Size(double.infinity, 56),
+      ),
+      child: Text(
+        'Continue',
+        style: GoogleFonts.urbanist(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\onboarding\signup_screen.dart
+import 'package:flutter/material.dart';
+import '../../../utils/constants.dart';
+
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({Key? key}) : super(key: key);
+
+  @override
+  State<SignUpScreen> createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen> {
+  int _currentStep = 1;
+  final PageController _pageController = PageController();
+  String? _selectedGender;
+  String? _selectedAgeRange;
+  final List<String> _selectedGenres = [];
+  
+  final _profileFormKey = GlobalKey<FormState>();
+  final _accountFormKey = GlobalKey<FormState>();
+  
+  // Controllers for profile step
+  final TextEditingController _fullNameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _dobController = TextEditingController();
+  final TextEditingController _countryController = TextEditingController();
+  
+  // Controllers for account step
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  final List<String> _ageRanges = [
+    '14 - 17', '18 - 24', '25 - 29', '30 - 34',
+    '35 - 39', '40 - 44', '45 - 49', 'â‰¥ 50'
+  ];
+
+  final List<Map<String, dynamic>> _genres = [
+    {'name': 'Romance', 'icon': 'ðŸ’•'},
+    {'name': 'Fiction', 'icon': 'ðŸ“š'},
+    {'name': 'Sci-Fi', 'icon': 'ðŸš€'},
+    {'name': 'Horror', 'icon': 'ðŸ‘»'},
+    {'name': 'Mystery', 'icon': 'ðŸ”'},
+    {'name': 'Thriller', 'icon': 'ðŸŽ­'},
+    {'name': 'Psychology', 'icon': 'ðŸ§ '},
+    {'name': 'Biography', 'icon': 'ðŸ“'},
+    {'name': 'Business', 'icon': 'ðŸ’¼'},
+    {'name': 'History', 'icon': 'ðŸ“œ'},
+    {'name': 'Children', 'icon': 'ðŸ§¸'},
+    {'name': 'Literature', 'icon': 'ðŸ“–'},
+    {'name': 'Art & Photography', 'icon': 'ðŸŽ¨'},
+    {'name': 'Food & Drink', 'icon': 'ðŸ³'},
+    {'name': 'Guide / How-To', 'icon': 'ðŸ“Œ'},
+    {'name': 'Travel', 'icon': 'âœˆï¸'},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: _currentStep > 1
+            ? IconButton(
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.black,
+                ),
+                onPressed: _previousStep,
+              )
+            : null,
+        title: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: _currentStep / 5,
+              backgroundColor: Colors.grey.shade200,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              minHeight: 4,
+            ),
+          ),
+        ),
+      ),
+      body: PageView(
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          _buildGenderStep(),
+          _buildAgeStep(),
+          _buildGenreStep(),
+          _buildProfileStep(),
+          _buildAccountStep(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenderStep() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'What is your gender? â„¹ï¸',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Select gender for better content.',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 32),
+          _buildGenderOption('I am male', 'male'),
+          _buildGenderOption('I am female', 'female'),
+          _buildGenderOption('Rather not to say', 'other'),
+          const Spacer(),
+          ElevatedButton(
+            onPressed: _selectedGender != null ? _nextStep : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              minimumSize: const Size(double.infinity, 52),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              disabledBackgroundColor: Colors.grey.shade300,
+            ),
+            child: const Text(
+              'Continue',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAgeStep() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Choose Your Age ðŸŽ¯',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Select age range for better content.',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 32),
+          Expanded(
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 2.5,
+              ),
+              itemCount: _ageRanges.length,
+              itemBuilder: (context, index) {
+                final range = _ageRanges[index];
+                final isSelected = _selectedAgeRange == range;
+                
+                return InkWell(
+                  onTap: () => setState(() => _selectedAgeRange = range),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: isSelected ? AppColors.primary : Colors.grey.shade300,
+                        width: 1,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      color: isSelected ? AppColors.primary : Colors.white,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      range,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          ElevatedButton(
+            onPressed: _selectedAgeRange != null ? _nextStep : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              minimumSize: const Size(double.infinity, 52),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              disabledBackgroundColor: Colors.grey.shade300,
+            ),
+            child: const Text(
+              'Continue',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenreStep() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Choose the Book Genre\nYou Like ðŸ“š',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Select your preferred book genre for better\nrecommendations as you can skip it.',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 32),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: _genres.map((genre) {
+                  final isSelected = _selectedGenres.contains(genre['name']);
+                  return InkWell(
+                    onTap: () {
+                      setState(() {
+                        if (isSelected) {
+                          _selectedGenres.remove(genre['name']);
+                        } else {
+                          _selectedGenres.add(genre['name']);
+                        }
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary : Colors.white,
+                        border: Border.all(
+                          color: isSelected 
+                              ? AppColors.primary 
+                              : Colors.grey.shade300,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            genre['icon'],
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            genre['name'],
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black87,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => _nextStep(),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text(
+                    'Skip',
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _selectedGenres.isNotEmpty ? _nextStep : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    disabledBackgroundColor: Colors.grey.shade300,
+                  ),
+                  child: const Text(
+                    'Continue',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileStep() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Complete Your Profile ðŸ“',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Don\'t worry, only you can see your personal\ndata. No one else will be able to see it.',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 32),
+          Center(
+            child: Stack(
+              children: [
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey.shade300),
+                    image: const DecorationImage(
+                      image: AssetImage('assets/images/profile_placeholder.png'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+          Form(
+            key: _profileFormKey,
+            child: Column(
+              children: [
+                _buildTextField(
+                  controller: _fullNameController,
+                  label: 'Full Name',
+                  hint: 'Enter your full name',
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _phoneController,
+                  label: 'Phone Number',
+                  hint: '+1 234 567 8900',
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _dobController,
+                  label: 'Date of Birth',
+                  hint: 'MM/DD/YYYY',
+                  readOnly: true,
+                  onTap: () => _selectDate(context),
+                  suffixIcon: Icon(Icons.calendar_today, 
+                    color: AppColors.primary, size: 20),
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _countryController,
+                  label: 'Country',
+                  hint: 'Select your country',
+                  readOnly: true,
+                  onTap: () => _showCountryPicker(context),
+                  suffixIcon: Icon(Icons.keyboard_arrow_down, 
+                    color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+          const Spacer(),
+          ElevatedButton(
+            onPressed: _validateAndContinue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              minimumSize: const Size(double.infinity, 52),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Continue',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAccountStep() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Create an Account ðŸ”',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Enter your username, email & password. If you\nforget it, then you have to do forgot password.',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 32),
+          Form(
+            key: _accountFormKey,
+            child: Column(
+              children: [
+                _buildTextField(
+                  controller: _usernameController,
+                  label: 'Username',
+                  hint: 'Enter your username',
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _emailController,
+                  label: 'Email',
+                  hint: 'Enter your email address',
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _passwordController,
+                  label: 'Password',
+                  hint: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+                  isPassword: true,
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _confirmPasswordController,
+                  label: 'Confirm Password',
+                  hint: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+                  isPassword: true,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: true,
+                        onChanged: (value) {},
+                        activeColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Remember me',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const Spacer(),
+          ElevatedButton(
+            onPressed: _createAccount,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              minimumSize: const Size(double.infinity, 52),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Sign Up',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    TextInputType? keyboardType,
+    bool readOnly = false,
+    bool isPassword = false,
+    VoidCallback? onTap,
+    Widget? suffixIcon,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          readOnly: readOnly,
+          obscureText: isPassword,
+          onTap: onTap,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 16,
+            ),
+            suffixIcon: suffixIcon ?? (isPassword
+                ? IconButton(
+                    icon: const Icon(Icons.visibility_off),
+                    onPressed: () {},
+                    color: Colors.grey.shade400,
+                  )
+                : null),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.black87,
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'This field is required';
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGenderOption(String label, String value) {
+    final isSelected = _selectedGender == value;
+    
+    return InkWell(
+      onTap: () => setState(() => _selectedGender = value),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.grey.shade300,
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? AppColors.primary : Colors.grey.shade400,
+                  width: 2,
+                ),
+              ),
+              child: isSelected
+                  ? Center(
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+                fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _dobController.text = '${picked.month}/${picked.day}/${picked.year}';
+      });
+    }
+  }
+
+  void _showCountryPicker(BuildContext context) {
+    // Implement country picker
+  }
+
+  void _validateAndContinue() {
+    if (_profileFormKey.currentState?.validate() ?? false) {
+      _nextStep();
+    }
+  }
+
+  void _createAccount() {
+    if (_accountFormKey.currentState?.validate() ?? false) {
+      // Implement account creation
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+  }
+
+  void _nextStep() {
+    if (_currentStep < 5) {
+      setState(() {
+        _currentStep++;
+      });
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _previousStep() {
+    if (_currentStep > 1) {
+      setState(() {
+        _currentStep--;
+      });
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _fullNameController.dispose();
+    _phoneController.dispose();
+    _dobController.dispose();
+    _countryController.dispose();
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\onboarding\splash_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
+import 'walkthrough_screen.dart';
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({Key? key}) : super(key: key);
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Configure animations
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+    ));
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+    ));
+
+    // Start animation
+    _controller.forward();
+
+    // Navigate to walkthrough screen after delay
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const WalkthroughScreen()),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _fadeAnimation.value,
+              child: Transform.scale(
+                scale: _scaleAnimation.value,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // App Logo/Icon
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [Color(0xFFFF7A00), Color(0xFFFF9D42)],
+                                ),
+                                borderRadius: BorderRadius.circular(32),
+                              ),
+                              child: const Icon(
+                                Icons.book_rounded,
+                                size: 64,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            // App Name
+                            RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: GoogleFonts.urbanist(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: 'Era',
+                                    style: GoogleFonts.urbanist(
+                                      color: Color(0xFFFF7A00),
+                                    ),
+                                  ),
+                                  const TextSpan(text: 'book'),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // Tagline
+                            Text(
+                              'Your Digital Book Companion',
+                              style: GoogleFonts.urbanist(
+                                fontSize: 16,
+                                color: Colors.black54,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Loading animation at the bottom
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 32),
+                      child: SizedBox(
+                        width: 110,
+                        height: 110,
+                        child: ColorFiltered(
+                          colorFilter: const ColorFilter.mode(
+                            Color(0xFFFF7A00),
+                            BlendMode.srcATop,
+                          ),
+                          child: Lottie.asset(
+                            'assets/animations/loading.json',
+                            fit: BoxFit.cover,
+                            repeat: true,
+                            animate: true,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\onboarding\walkthrough_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import 'gender_selection_screen.dart'; // This was previously used for "Get Started" navigation
+import '../auth/signin_screen.dart';    // Import SignInScreen
+import '../../utils/constants.dart';    // Ensure AppColors and other utils are accessible
+
+class WalkthroughScreen extends StatelessWidget {
+  const WalkthroughScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ));
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool isDesktop = screenWidth > 800;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: isDesktop ? _buildDesktopLayout(context) : _buildMobileLayout(context),
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: Stack(
+            children: [
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/library.jpg'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 300,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withOpacity(0.0),
+                        Colors.white.withOpacity(0.2),
+                        Colors.white.withOpacity(0.6),
+                        Colors.white.withOpacity(0.9),
+                        Colors.white,
+                      ],
+                      stops: const [0.0, 0.3, 0.6, 0.8, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          child: _buildContent(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopLayout(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Row(
+      children: [
+        // Left side - Hero Image
+        Expanded(
+          flex: 6,
+          child: Container(
+            height: screenHeight,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/library.jpg'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerRight,
+                      end: Alignment.centerLeft,
+                      colors: [
+                        Colors.black.withOpacity(0.8),
+                        Colors.black.withOpacity(0.4),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: screenWidth * 0.08,
+                  bottom: screenHeight * 0.15,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Discover\nYour Next\nFavorite Book',
+                        style: GoogleFonts.urbanist(
+                          fontSize: screenWidth * 0.04,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          height: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Find the perfect story that matches\nyour interests and mood.',
+                        style: GoogleFonts.urbanist(
+                          fontSize: screenWidth * 0.014,
+                          color: Colors.white.withOpacity(0.9),
+                          height: 1.5,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Right side - Content
+        Expanded(
+          flex: 4,
+          child: Container(
+            height: screenHeight,
+            color: Colors.white,
+            child: Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 450),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 40),
+                        RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            style: GoogleFonts.urbanist(
+                              fontSize: 42,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                              height: 1.2,
+                              letterSpacing: -0.5,
+                            ),
+                            children: [
+                              const TextSpan(text: 'Welcome to '),
+                              TextSpan(
+                                text: 'ebook',
+                                style: GoogleFonts.urbanist(
+                                  color: const Color(0xFFFF7A00),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const TextSpan(text: ' ðŸ‘‹'),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'The Best Ebook Store & Reader\nApplication in this Century',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.urbanist(
+                            fontSize: 18,
+                            color: Colors.black54,
+                            height: 1.5,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 48),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF7A00),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ...List.generate(
+                              4,
+                              (index) => Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 48),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(32),
+                              ),
+                              side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                              backgroundColor: Colors.white,
+                            ),
+                            onPressed: () {},
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset('assets/icons/google.png', height: 24),
+                                const SizedBox(width: 16),
+                                Text(
+                                  'Continue with Google',
+                                  style: GoogleFonts.urbanist(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(32),
+                              ),
+                              backgroundColor: const Color(0xFFFF7A00),
+                              elevation: 0,
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const GenderSelectionScreen()),
+                              );
+                            },
+                            child: Text(
+                              'Get Started',
+                              style: GoogleFonts.urbanist(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        TextButton(
+                          onPressed: () {
+                            // Navigate to SignInScreen when "I Already Have an Account" is clicked
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SignInScreen()),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: const Color(0xFFFF7A00),
+                          ),
+                          child: Text(
+                            'I Already Have an Account',
+                            style: GoogleFonts.urbanist(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        RichText(
+          textAlign: TextAlign.center,
+          text: TextSpan(
+            style: GoogleFonts.urbanist(
+              fontSize: 32,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+            children: [
+              const TextSpan(text: 'Welcome to '),
+              TextSpan(
+                text: 'ebook',
+                style: GoogleFonts.urbanist(
+                  color: const Color(0xFFFF7A00),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const TextSpan(text: ' ðŸ‘‹'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'The Best Ebook Store & Reader\nApplication in this Century',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.urbanist(
+            fontSize: 16,
+            color: Colors.black54,
+            height: 1.5,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 32),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 24,
+              height: 8,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF7A00),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ...List.generate(
+              4,
+              (index) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 32),
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(32),
+            ),
+            side: BorderSide(color: Colors.grey.shade300),
+            backgroundColor: Colors.white,
+          ),
+          onPressed: () {},
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset('assets/icons/google.png', height: 24),
+              const SizedBox(width: 12),
+              Text(
+                'Continue with Google',
+                style: GoogleFonts.urbanist(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(32),
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFF7A00), Color(0xFFFF9D42)],
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(32),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const GenderSelectionScreen()),
+                );
+              },
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Text(
+                    'Get Started',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextButton(
+          onPressed: () {
+            // Navigate to SignInScreen on "I Already Have an Account"
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SignInScreen()),
+            );
+          },
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFFFF7A00),
+          ),
+          child: Text(
+            'I Already Have an Account',
+            style: GoogleFonts.urbanist(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\purchased\purchased_screen.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\wishlist\wishlist_screen.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\services\auth_service.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\services\firebase_service.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\services\storage_service.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\utils\constants.dart
+import 'package:flutter/material.dart';
+
+class AppColors {
+  // Brand Colors
+  static const Color primary = Color(0xFFFF7B2C);
+  static const Color primaryLight = Color(0xFFFFEDE6);
+  
+  // Base Colors
+  static const Color white = Color(0xFFFFFFFF);
+  static const Color black = Color(0xFF222222);
+  
+  // Text Colors
+  static const Color textPrimary = Color(0xFF222222);
+  static const Color textSecondary = Color(0xFF666666);
+  static const Color textLight = Color(0xFF999999);
+  
+  // Background Colors
+  static const Color background = Color(0xFFFFFFFF);
+  static const Color surfaceBackground = Color(0xFFF8F8F8);
+  
+  // Border & Divider Colors
+  static const Color border = Color(0xFFEEEEEE);
+  static const Color divider = Color(0xFFF1F1F1);
+  
+  // Input Field Colors
+  static const Color inputBackground = Color(0xFFFAFAFA);
+  static const Color inputBorder = Color(0xFFE0E0E0);
+  
+  // Status Colors
+  static const Color success = Color(0xFF4CAF50);
+  static const Color error = Color(0xFFE53935);
+  static const Color warning = Color(0xFFFFA000);
+  static const Color info = Color(0xFF2196F3);
+  
+  // Gradient Colors
+  static const List<Color> primaryGradient = [
+    Color(0xFFFF7B2C),
+    Color(0xFFFF9A5A),
+  ];
+}
+
+class AppSpacing {
+  // Padding & Margin
+  static const double xs = 4.0;
+  static const double sm = 8.0;
+  static const double md = 16.0;
+  static const double lg = 24.0;
+  static const double xl = 32.0;
+  
+  // Border Radius
+  static const double radiusSm = 8.0;
+  static const double radiusMd = 12.0;
+  static const double radiusLg = 16.0;
+  
+  // Button Heights
+  static const double buttonHeight = 52.0;
+  static const double inputHeight = 48.0;
+}
+
+class AppShadows {
+  static const BoxShadow small = BoxShadow(
+    color: Color(0x0A000000),
+    blurRadius: 8,
+    offset: Offset(0, 2),
+  );
+  
+  static const BoxShadow medium = BoxShadow(
+    color: Color(0x1A000000),
+    blurRadius: 12,
+    offset: Offset(0, 4),
+  );
+}
+
+class AppFontSizes {
+  static const double h1 = 32.0;
+  static const double h2 = 24.0;
+  static const double h3 = 20.0;
+  static const double h4 = 18.0;
+  static const double body1 = 16.0;
+  static const double body2 = 14.0;
+  static const double caption = 12.0;
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\utils\routes.dart
+import 'package:flutter/material.dart';
+import '../../screens/onboarding/splash_screen.dart';
+import '../../screens/onboarding/walkthrough_screen.dart';
+import '../../screens/onboarding/signup_screen.dart';
+
+class AppRouter {
+  static final navigatorKey = GlobalKey<NavigatorState>();
+
+  static Route<dynamic> onGenerateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case Routes.splash:
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
+      case Routes.walkthrough:
+        return MaterialPageRoute(builder: (_) => const WalkthroughScreen());
+      case Routes.signup:
+        return MaterialPageRoute(builder: (_) => const SignUpScreen());
+      default:
+        return MaterialPageRoute(
+          builder: (_) => Scaffold(
+            body: Center(
+              child: Text('No route defined for ${settings.name}'),
+            ),
+          ),
+        );
+    }
+  }
+}
+
+// Route names as constants
+class Routes {
+  static const String splash = '/';
+  static const String walkthrough = '/walkthrough';
+  static const String signup = '/signup';
+}
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\utils\theme.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\widgets\book_card.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\widgets\custom_button.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\widgets\custom_textfield.dart
+
