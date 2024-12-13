@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../utils/constants.dart'; // Ensure AppColors and other utils are accessible
-import '../home/home_screen.dart'; // Import the HomeScreen
+import '../../utils/constants.dart';
+import '../home/home_screen.dart';
 
 class CreateNewPasswordScreen extends StatefulWidget {
   const CreateNewPasswordScreen({Key? key}) : super(key: key);
@@ -29,19 +29,17 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
   }
 
   void _onContinue() {
-    // After setting the new password successfully, show the success dialog
     _showResetSuccessDialog();
   }
 
   void _showResetSuccessDialog() {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.4), // Dark overlay
+      barrierColor: Colors.black.withOpacity(0.4),
       barrierDismissible: false,
       builder: (context) {
         return Stack(
           children: [
-            // Apply blur effect over entire screen
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
@@ -53,13 +51,13 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
             Center(
               child: Container(
                 width: 300,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withOpacity(0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 5),
                     ),
@@ -68,7 +66,6 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Icon in a colored circle
                     Container(
                       width: 80,
                       height: 80,
@@ -76,12 +73,10 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                         color: AppColors.primary.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Center(
-                        child: Icon(
-                          Icons.check,
-                          color: AppColors.primary,
-                          size: 40,
-                        ),
+                      child: Icon(
+                        Icons.check,
+                        color: AppColors.primary,
+                        size: 40,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -109,8 +104,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context); // Close the dialog
-                        // Navigate to HomeScreen
+                        Navigator.pop(context);
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -130,7 +124,6 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                         style: GoogleFonts.urbanist(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.none,
                         ),
                       ),
                     ),
@@ -144,11 +137,65 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
     );
   }
 
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 800;
+
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: isDesktop ? screenWidth * 0.3 : 24.0,
+            vertical: isDesktop ? 60.0 : 24.0,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _buildBackButton(context),
+                ],
+              ),
+              SizedBox(height: isDesktop ? 60 : 40),
+              _buildHeader(),
+              const SizedBox(height: 8),
+              _buildSubtitle(),
+              SizedBox(height: isDesktop ? 60 : 40),
+              _buildTextFieldLabel("Password"),
+              _buildPasswordField(
+                controller: _passwordController,
+                visible: _passwordVisible,
+                onToggle: () => setState(() => _passwordVisible = !_passwordVisible),
+              ),
+              const SizedBox(height: 24),
+              _buildTextFieldLabel("Confirm Password"),
+              _buildPasswordField(
+                controller: _confirmPasswordController,
+                visible: _confirmPasswordVisible,
+                onToggle: () => setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
+              ),
+              const SizedBox(height: 24),
+              _buildRememberMeCheckbox(),
+              SizedBox(height: isDesktop ? 60 : 40),
+              _buildContinueButton(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildBackButton(BuildContext context) {
     return Container(
       height: 40,
       width: 40,
-      margin: const EdgeInsets.only(left: 8),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(12),
@@ -168,7 +215,6 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
           fontSize: 28,
           fontWeight: FontWeight.bold,
           color: Colors.black,
-          decoration: TextDecoration.none,
         ),
         children: const [
           TextSpan(text: 'Create New Password '),
@@ -185,7 +231,6 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
         fontSize: 14,
         color: Colors.black54,
         height: 1.5,
-        decoration: TextDecoration.none,
       ),
     );
   }
@@ -197,7 +242,6 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
         fontSize: 14,
         fontWeight: FontWeight.w500,
         color: Colors.black87,
-        decoration: TextDecoration.none,
       ),
     );
   }
@@ -206,7 +250,6 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
     required TextEditingController controller,
     required bool visible,
     required VoidCallback onToggle,
-    String hintText = '••••••••••••',
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,14 +262,12 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
             fontSize: 16,
             color: Colors.black87,
             fontWeight: FontWeight.w500,
-            decoration: TextDecoration.none,
           ),
           decoration: InputDecoration(
-            hintText: hintText,
+            hintText: '••••••••••••',
             hintStyle: TextStyle(
               color: Colors.grey.shade400,
               fontSize: 16,
-              decoration: TextDecoration.none,
             ),
             suffixIcon: IconButton(
               icon: Icon(
@@ -276,7 +317,6 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
           style: GoogleFonts.urbanist(
             color: Colors.black87,
             fontSize: 14,
-            decoration: TextDecoration.none,
           ),
         ),
       ],
@@ -300,69 +340,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
         style: GoogleFonts.urbanist(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          decoration: TextDecoration.none,
         ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: _buildBackButton(context),
-        centerTitle: false,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 8),
-              _buildSubtitle(),
-              const SizedBox(height: 32),
-
-              // Password field
-              _buildTextFieldLabel("Password"),
-              _buildPasswordField(
-                controller: _passwordController,
-                visible: _passwordVisible,
-                onToggle: () => setState(() => _passwordVisible = !_passwordVisible),
-              ),
-              const SizedBox(height: 16),
-
-              // Confirm Password field
-              _buildTextFieldLabel("Confirm Password"),
-              _buildPasswordField(
-                controller: _confirmPasswordController,
-                visible: _confirmPasswordVisible,
-                onToggle: () => setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
-              ),
-              const SizedBox(height: 16),
-
-              _buildRememberMeCheckbox(),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          bottom: MediaQuery.of(context).padding.bottom + 24,
-          top: 16,
-        ),
-        child: _buildContinueButton(),
       ),
     );
   }

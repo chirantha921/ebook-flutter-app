@@ -1,7 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'book_genre_screen.dart';
+import '../../services/firebase_service.dart';
+import '../../main.dart' show firebaseService, authService;
 
 class AgeSelectionScreen extends StatefulWidget {
   const AgeSelectionScreen({Key? key}) : super(key: key);
@@ -11,7 +15,8 @@ class AgeSelectionScreen extends StatefulWidget {
 }
 
 class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
-  String? _selectedAge;
+  String? _selectedAgeRange;
+  bool _isLoading = false;
 
   final List<String> ageRanges = [
     '14 - 17',
@@ -24,6 +29,78 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
     '≥ 50',
   ];
 
+  Future<void> _saveAgeSelection() async {
+    if (_selectedAgeRange == null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final User? currentUser = authService.currentUser;
+      
+      if (currentUser == null) {
+        _showErrorDialog('User session not found. Please try signing in again.');
+        return;
+      }
+
+      // Update user profile in Firestore
+      await firebaseService.setDocument(
+        'users',
+        currentUser.uid,
+        {
+          'age_range': _selectedAgeRange,
+          'onboarding_step': 'age_completed',
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+      );
+
+      // Navigate to next screen
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const BookGenreScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorDialog('Failed to save selection. Please try again.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          'Error',
+          style: GoogleFonts.urbanist(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          message,
+          style: GoogleFonts.urbanist(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'OK',
+              style: GoogleFonts.urbanist(
+                color: const Color(0xFFFF7A00),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -34,6 +111,7 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
       statusBarIconBrightness: Brightness.dark,
       statusBarBrightness: Brightness.light,
     ));
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -207,7 +285,7 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
       ),
       child: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-        onPressed: () => Navigator.pop(context),
+        onPressed: _isLoading ? null : () => Navigator.pop(context),
         color: Colors.black87,
       ),
     );
@@ -284,10 +362,10 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
       itemCount: ageRanges.length,
       itemBuilder: (context, index) {
         final ageRange = ageRanges[index];
-        final isSelected = _selectedAge == ageRange;
+        final isSelected = _selectedAgeRange == ageRange;
 
         return GestureDetector(
-          onTap: () => setState(() => _selectedAge = ageRange),
+          onTap: _isLoading ? null : () => setState(() => _selectedAgeRange = ageRange),
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(28),
@@ -315,29 +393,39 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
 
   Widget _buildContinueButton(BuildContext context) {
     return ElevatedButton(
-      onPressed: _selectedAge == null
-          ? null
-          : () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const BookGenreScreen()),
-              );
-            },
+      onPressed: _selectedAgeRange == null || _isLoading ? null : _saveAgeSelection,
       style: ElevatedButton.styleFrom(
-        backgroundColor: _selectedAge == null ? Colors.grey.shade300 : const Color(0xFFFF7A00),
-        foregroundColor: _selectedAge == null ? Colors.black54 : Colors.white,
+        backgroundColor: _selectedAgeRange == null ? Colors.grey.shade300 : const Color(0xFFFF7A00),
+        foregroundColor: _selectedAgeRange == null ? Colors.black54 : Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
         ),
         minimumSize: const Size(double.infinity, 56),
       ),
-      child: Text(
-        'Continue',
-        style: GoogleFonts.urbanist(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (_isLoading)
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  _selectedAgeRange == null ? Colors.black54 : Colors.white,
+                ),
+              ),
+            )
+          else
+            Text(
+              'Continue',
+              style: GoogleFonts.urbanist(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+        ],
       ),
     );
   }

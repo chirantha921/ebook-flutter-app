@@ -1,8 +1,12 @@
+import 'dart:convert';
+import 'package:ebook_app/screens/onboarding/complete_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../utils/constants.dart'; // Make sure the path is correct
-import 'complete_profile_screen.dart'; // Import your new screen
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../screens/home/home_screen.dart';
+import '../../services/firebase_service.dart';
+import '../../main.dart' show firebaseService, authService;
 
 class BookGenreScreen extends StatefulWidget {
   const BookGenreScreen({Key? key}) : super(key: key);
@@ -12,29 +16,181 @@ class BookGenreScreen extends StatefulWidget {
 }
 
 class _BookGenreScreenState extends State<BookGenreScreen> {
-  final List<String> genres = [
-    'Romance',
-    'Fantasy',
-    'Sci-Fi',
-    'Horror',
-    'Mystery',
-    'Thriller',
-    'Psychology',
-    'Inspiration',
-    'Comedy',
-    'Action',
-    'Adventure',
-    'Comics',
-    'Children\'s',
-    'Art & Photography',
-    'Food & Drink',
-    'Biography',
-    'Science & Technology',
-    'Guide / How-to',
-    'Travel',
+  final Set<String> _selectedGenres = {};
+  bool _isLoading = false;
+
+  // Genre data with emojis and descriptions
+  final List<Map<String, dynamic>> _genres = [
+    {
+      'name': 'Romance',
+      'icon': '💕',
+      'description': 'Love stories and relationships',
+      'gradient': [const Color(0xFFFF6B6B), const Color(0xFFFF8E8E)],
+    },
+    {
+      'name': 'Fantasy',
+      'icon': '🐉',
+      'description': 'Magical worlds and creatures',
+      'gradient': [const Color(0xFF6B66FF), const Color(0xFF8E8AFF)],
+    },
+    {
+      'name': 'Sci-Fi',
+      'icon': '🚀',
+      'description': 'Future and technology',
+      'gradient': [const Color(0xFF4FACFE), const Color(0xFF00F2FE)],
+    },
+    {
+      'name': 'Horror',
+      'icon': '👻',
+      'description': 'Scary and supernatural',
+      'gradient': [const Color(0xFF434343), const Color(0xFF000000)],
+    },
+    {
+      'name': 'Mystery',
+      'icon': '🔍',
+      'description': 'Crime and detective stories',
+      'gradient': [const Color(0xFF4B6CB7), const Color(0xFF182848)],
+    },
+    {
+      'name': 'Thriller',
+      'icon': '🎭',
+      'description': 'Suspense and action',
+      'gradient': [const Color(0xFFED213A), const Color(0xFF93291E)],
+    },
+    {
+      'name': 'Psychology',
+      'icon': '🧠',
+      'description': 'Mind and behavior',
+      'gradient': [const Color(0xFF8E2DE2), const Color(0xFF4A00E0)],
+    },
+    {
+      'name': 'Inspiration',
+      'icon': '⭐',
+      'description': 'Motivation and success',
+      'gradient': [const Color(0xFFF7971E), const Color(0xFFFFD200)],
+    },
+    {
+      'name': 'Comedy',
+      'icon': '😂',
+      'description': 'Humor and fun',
+      'gradient': [const Color(0xFF2AF598), const Color(0xFF009EFD)],
+    },
+    {
+      'name': 'Action',
+      'icon': '💥',
+      'description': 'Adventure and excitement',
+      'gradient': [const Color(0xFFFF416C), const Color(0xFFFF4B2B)],
+    },
+    {
+      'name': 'Adventure',
+      'icon': '🗺️',
+      'description': 'Exploration and journeys',
+      'gradient': [const Color(0xFF1FA2FF), const Color(0xFF12D8FA)],
+    },
+    {
+      'name': 'Comics',
+      'icon': '📚',
+      'description': 'Graphic novels and manga',
+      'gradient': [const Color(0xFFFF5F6D), const Color(0xFFFFC371)],
+    },
+    {
+      'name': 'Children\'s',
+      'icon': '🧸',
+      'description': 'Books for young readers',
+      'gradient': [const Color(0xFF00B4DB), const Color(0xFF0083B0)],
+    },
+    {
+      'name': 'Art & Photography',
+      'icon': '🎨',
+      'description': 'Visual arts and photography',
+      'gradient': [const Color(0xFFDA4453), const Color(0xFF89216B)],
+    },
+    {
+      'name': 'Food & Drink',
+      'icon': '🍳',
+      'description': 'Cooking and culinary arts',
+      'gradient': [const Color(0xFF11998E), const Color(0xFF38EF7D)],
+    },
+    {
+      'name': 'Biography',
+      'icon': '📝',
+      'description': 'Life stories and memoirs',
+      'gradient': [const Color(0xFF834D9B), const Color(0xFFD04ED6)],
+    },
   ];
 
-  Set<String> _selectedGenres = {};
+  Future<void> _saveGenreSelections() async {
+    if (_selectedGenres.isEmpty) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final User? currentUser = authService.currentUser;
+      
+      if (currentUser == null) {
+        _showErrorDialog('User session not found. Please try signing in again.');
+        return;
+      }
+
+      // Update user profile in Firestore with selected genres
+      await firebaseService.setDocument(
+        'users',
+        currentUser.uid,
+        {
+          'preferred_genres': _selectedGenres.toList(),
+          'onboarding_step': 'onboarding_completed',
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+      );
+
+      // Navigate to home screen
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false, // Remove all previous routes
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorDialog('Failed to save selection. Please try again.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          'Error',
+          style: GoogleFonts.urbanist(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          message,
+          style: GoogleFonts.urbanist(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'OK',
+              style: GoogleFonts.urbanist(
+                color: const Color(0xFFFF7A00),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +202,7 @@ class _BookGenreScreenState extends State<BookGenreScreen> {
       statusBarIconBrightness: Brightness.dark,
       statusBarBrightness: Brightness.light,
     ));
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -227,7 +384,7 @@ class _BookGenreScreenState extends State<BookGenreScreen> {
       ),
       child: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-        onPressed: () => Navigator.pop(context),
+        onPressed: _isLoading ? null : () => Navigator.pop(context),
         color: Colors.black87,
       ),
     );
@@ -286,35 +443,65 @@ class _BookGenreScreenState extends State<BookGenreScreen> {
     return Wrap(
       spacing: 12,
       runSpacing: 12,
-      children: genres.map((genre) {
-        final isSelected = _selectedGenres.contains(genre);
+      children: _genres.map((genre) {
+        final isSelected = _selectedGenres.contains(genre['name']);
+        final gradientColors = genre['gradient'] as List<Color>;
+
         return GestureDetector(
-          onTap: () {
-            setState(() {
-              if (isSelected) {
-                _selectedGenres.remove(genre);
-              } else {
-                _selectedGenres.add(genre);
-              }
-            });
-          },
+          onTap: _isLoading
+              ? null
+              : () {
+                  setState(() {
+                    if (isSelected) {
+                      _selectedGenres.remove(genre['name']);
+                    } else {
+                      _selectedGenres.add(genre['name']);
+                    }
+                  });
+                },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFFF7A00) : Colors.white,
+              gradient: isSelected
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: gradientColors,
+                    )
+                  : null,
+              color: isSelected ? null : Colors.white,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: isSelected ? const Color(0xFFFF7A00) : Colors.grey.shade300,
+                color: isSelected ? Colors.transparent : Colors.grey.shade300,
                 width: 2,
               ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: gradientColors[0].withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
             ),
-            child: Text(
-              genre,
-              style: GoogleFonts.urbanist(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : Colors.black87,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  genre['icon'],
+                  style: const TextStyle(fontSize: 20),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  genre['name'],
+                  style: GoogleFonts.urbanist(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -324,13 +511,20 @@ class _BookGenreScreenState extends State<BookGenreScreen> {
 
   Widget _buildSkipButton() {
     return TextButton(
-      onPressed: () {
-        // Implement skip action if needed
-        // For example, directly go to the next screen:
-        // Navigator.push(context, MaterialPageRoute(builder: (context) => const CompleteProfileScreen()));
-      },
+      onPressed: _isLoading
+          ? null
+          : () {
+              // Skip directly to profile completion
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CompleteProfileScreen(),
+                ),
+              );
+            },
       style: TextButton.styleFrom(
         foregroundColor: const Color(0xFFFF7A00),
+        minimumSize: const Size(double.infinity, 44),
       ),
       child: Text(
         'Skip',
@@ -344,30 +538,39 @@ class _BookGenreScreenState extends State<BookGenreScreen> {
 
   Widget _buildContinueButton() {
     return ElevatedButton(
-      onPressed: _selectedGenres.isNotEmpty
-          ? () {
-              // Navigate to CompleteProfileScreen when continue is clicked
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CompleteProfileScreen()),
-              );
-            }
-          : null,
+      onPressed: _selectedGenres.isEmpty || _isLoading ? null : _saveGenreSelections,
       style: ElevatedButton.styleFrom(
-        backgroundColor: _selectedGenres.isNotEmpty ? const Color(0xFFFF7A00) : Colors.grey.shade300,
-        foregroundColor: _selectedGenres.isNotEmpty ? Colors.white : Colors.black54,
+        backgroundColor: _selectedGenres.isEmpty ? Colors.grey.shade300 : const Color(0xFFFF7A00),
+        foregroundColor: _selectedGenres.isEmpty ? Colors.black54 : Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
         ),
         minimumSize: const Size(double.infinity, 56),
       ),
-      child: Text(
-        'Continue',
-        style: GoogleFonts.urbanist(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (_isLoading)
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  _selectedGenres.isEmpty ? Colors.black54 : Colors.white,
+                ),
+              ),
+            )
+          else
+            Text(
+              'Continue',
+              style: GoogleFonts.urbanist(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+        ],
       ),
     );
   }

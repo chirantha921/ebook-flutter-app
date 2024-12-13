@@ -1,13 +1,96 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
-import 'gender_selection_screen.dart'; // This was previously used for "Get Started" navigation
-import '../auth/signin_screen.dart';    // Import SignInScreen
-import '../../utils/constants.dart';    // Ensure AppColors and other utils are accessible
+import 'gender_selection_screen.dart';
+import '../auth/signin_screen.dart';
+import '../../utils/constants.dart';
+import '../../services/auth_service.dart';
+import '../../main.dart' show authService;
+import 'signup_screen.dart';
 
-class WalkthroughScreen extends StatelessWidget {
+class WalkthroughScreen extends StatefulWidget {
   const WalkthroughScreen({Key? key}) : super(key: key);
+
+  @override
+  State<WalkthroughScreen> createState() => _WalkthroughScreenState();
+}
+
+class _WalkthroughScreenState extends State<WalkthroughScreen> {
+  bool _isLoading = false;
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+
+    try {
+      // Sign in with Google using Firebase Auth
+      final UserCredential userCredential = await authService.signInWithGoogle();
+      final User user = userCredential.user!;
+      
+      // Store user data
+      await _storeUserData({
+        'uid': user.uid,
+        'email': user.email,
+        'displayName': user.displayName,
+        'photoURL': user.photoURL,
+      });
+      
+      // Navigate to the next screen
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const GenderSelectionScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorDialog('Failed to sign in with Google: ${e.toString()}');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _storeUserData(Map<String, dynamic> userData) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_data', json.encode(userData));
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          'Error',
+          style: GoogleFonts.urbanist(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          message,
+          style: GoogleFonts.urbanist(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'OK',
+              style: GoogleFonts.urbanist(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,18 +130,15 @@ class WalkthroughScreen extends StatelessWidget {
                 right: 0,
                 height: 300,
                 child: Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.white.withOpacity(0.0),
-                        Colors.white.withOpacity(0.2),
-                        Colors.white.withOpacity(0.6),
-                        Colors.white.withOpacity(0.9),
+                        Colors.transparent,
                         Colors.white,
                       ],
-                      stops: const [0.0, 0.3, 0.6, 0.8, 1.0],
+                      stops: [0.0, 1.0],
                     ),
                   ),
                 ),
@@ -69,7 +149,7 @@ class WalkthroughScreen extends StatelessWidget {
         Container(
           color: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-          child: _buildContent(context),
+          child: _buildContent(context, isDesktop: false), // Pass isDesktop=false for mobile
         ),
       ],
     );
@@ -81,7 +161,6 @@ class WalkthroughScreen extends StatelessWidget {
 
     return Row(
       children: [
-        // Left side - Hero Image
         Expanded(
           flex: 6,
           child: Container(
@@ -143,7 +222,6 @@ class WalkthroughScreen extends StatelessWidget {
             ),
           ),
         ),
-        // Right side - Content
         Expanded(
           flex: 4,
           child: Container(
@@ -179,7 +257,7 @@ class WalkthroughScreen extends StatelessWidget {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const TextSpan(text: ' 👋'),
+                              const TextSpan(text: '🖐️'),
                             ],
                           ),
                         ),
@@ -225,83 +303,7 @@ class WalkthroughScreen extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 48),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(32),
-                              ),
-                              side: BorderSide(color: Colors.grey.shade300, width: 1.5),
-                              backgroundColor: Colors.white,
-                            ),
-                            onPressed: () {},
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset('assets/icons/google.png', height: 24),
-                                const SizedBox(width: 16),
-                                Text(
-                                  'Continue with Google',
-                                  style: GoogleFonts.urbanist(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 20),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(32),
-                              ),
-                              backgroundColor: const Color(0xFFFF7A00),
-                              elevation: 0,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const GenderSelectionScreen()),
-                              );
-                            },
-                            child: Text(
-                              'Get Started',
-                              style: GoogleFonts.urbanist(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        TextButton(
-                          onPressed: () {
-                            // Navigate to SignInScreen when "I Already Have an Account" is clicked
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const SignInScreen()),
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor: const Color(0xFFFF7A00),
-                          ),
-                          child: Text(
-                            'I Already Have an Account',
-                            style: GoogleFonts.urbanist(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                        _buildButtons(isDesktop: true), // Pass isDesktop=true for desktop
                         const SizedBox(height: 40),
                       ],
                     ),
@@ -315,7 +317,7 @@ class WalkthroughScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context) {
+  Widget _buildContent(BuildContext context, {required bool isDesktop}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -336,7 +338,7 @@ class WalkthroughScreen extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const TextSpan(text: ' 👋'),
+              const TextSpan(text: '🖐️'),
             ],
           ),
         ),
@@ -381,88 +383,137 @@ class WalkthroughScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 32),
-        OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(32),
-            ),
-            side: BorderSide(color: Colors.grey.shade300),
-            backgroundColor: Colors.white,
-          ),
-          onPressed: () {},
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('assets/icons/google.png', height: 24),
-              const SizedBox(width: 12),
-              Text(
-                'Continue with Google',
-                style: GoogleFonts.urbanist(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32),
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF7A00), Color(0xFFFF9D42)],
-            ),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(32),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const GenderSelectionScreen()),
-                );
-              },
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Center(
-                  child: Text(
-                    'Get Started',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        TextButton(
-          onPressed: () {
-            // Navigate to SignInScreen on "I Already Have an Account"
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const SignInScreen()),
-            );
-          },
-          style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFFFF7A00),
-          ),
-          child: Text(
-            'I Already Have an Account',
-            style: GoogleFonts.urbanist(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
+        _buildButtons(isDesktop: isDesktop),
       ],
     );
   }
+
+  Widget _buildButtons({required bool isDesktop}) {
+  final isWindows = Platform.isWindows;
+
+  return Column(
+    children: [
+      // Only show the Google login button if we're not on Windows
+      if (!isWindows) 
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(32),
+              ),
+              side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+              backgroundColor: Colors.white,
+            ),
+            onPressed: _isLoading ? null : _handleGoogleSignIn,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (_isLoading)
+                  Container(
+                    width: double.infinity,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Signing in...',
+                          style: GoogleFonts.urbanist(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset('assets/icons/google.png', height: 24),
+                      const SizedBox(width: 16),
+                      Text(
+                        'Continue with Google',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ),
+      if (!isWindows)
+        const SizedBox(height: 16),
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(32),
+            ),
+            backgroundColor: const Color(0xFFFF7A00),
+            elevation: 0,
+            disabledBackgroundColor: Colors.grey.shade300,
+          ),
+          onPressed: _isLoading
+              ? null
+              : () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SignUpScreen(),
+                    ),
+                  );
+                },
+          child: Text(
+            'Get Started',
+            style: GoogleFonts.urbanist(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(height: 24),
+      TextButton(
+        onPressed: _isLoading
+            ? null
+            : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SignInScreen()),
+                );
+              },
+        style: TextButton.styleFrom(
+          foregroundColor: const Color(0xFFFF7A00),
+          disabledForegroundColor: Colors.grey.shade400,
+        ),
+        child: Text(
+          'I Already Have an Account',
+          style: GoogleFonts.urbanist(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
 }

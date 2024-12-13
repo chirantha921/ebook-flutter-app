@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "311947320356",
+    "project_id": "ebook-zakaria",
+    "storage_bucket": "ebook-zakaria.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:311947320356:android:b47bd9a43f7531d5ee8cb1",
+        "android_client_info": {
+          "package_name": "com.ihyaeforum.mayastoron"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "311947320356-n7f5ijci01u512vaglmf21qbp06f170k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ihyaeforum.mayastoron",
+            "certificate_hash": "37904965847ececb7f08327efc351012c8393315"
+          }
+        },
+        {
+          "client_id": "311947320356-9ev2ica35qc2tld7ido6jqe01p06av40.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0ZQL9PuxU84r30Jfh8cjSlzMKPV9bp70"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "311947320356-9ev2ica35qc2tld7ido6jqe01p06av40.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
