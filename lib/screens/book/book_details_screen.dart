@@ -1,3 +1,4 @@
+import 'package:ebook_app/screens/book/reader_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../utils/constants.dart';
@@ -408,7 +409,18 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
         Expanded(
           child: ElevatedButton(
             onPressed: () {
-              // Implement read now functionality
+             Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => ReaderScreen(
+      pdfPath: 'assets/books/atomic_habits.pdf', // Local path or URL
+      bookTitle: 'Book Title',
+      authorName: 'F. Scott Fitzgerald',
+      coverImageUrl: 'https://example.com/book_cover.jpg', // Optional
+
+    ),
+  ),
+);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,

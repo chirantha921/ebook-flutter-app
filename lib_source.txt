@@ -2293,6 +2293,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
 
     File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\book\book_details_screen.dart
+import 'package:ebook_app/screens/book/reader_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../utils/constants.dart';
@@ -2703,7 +2704,18 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
         Expanded(
           child: ElevatedButton(
             onPressed: () {
-              // Implement read now functionality
+             Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => ReaderScreen(
+      pdfPath: 'assets/books/atomic_habits.pdf', // Local path or URL
+      bookTitle: 'Book Title',
+      authorName: 'F. Scott Fitzgerald',
+      coverImageUrl: 'https://example.com/book_cover.jpg', // Optional
+
+    ),
+  ),
+);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -2851,6 +2863,432 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
 
 
     File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\book\reader_screen.dart
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import '../../utils/constants.dart';
+
+class ReaderScreen extends StatefulWidget {
+  final String pdfPath;
+  final String bookTitle;
+  final String authorName;
+  final String coverImageUrl;
+
+  const ReaderScreen({
+    Key? key,
+    required this.pdfPath,
+    required this.bookTitle,
+    required this.authorName,
+    this.coverImageUrl = '',
+  }) : super(key: key);
+
+  @override
+  State<ReaderScreen> createState() => _ReaderScreenState();
+}
+
+class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderStateMixin {
+  late PdfViewerController _pdfViewerController;
+  final GlobalKey<SfPdfViewerState> _pdfViewerKey = GlobalKey();
+  
+  bool _isLiked = false;
+  bool _isBookmarked = false;
+  bool _showControls = true;
+  bool _showComments = false;
+  double _currentPage = 1;
+  double _totalPages = 0;
+  bool _isLoading = true;
+  
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pdfViewerController = PdfViewerController();
+    
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    
+    _fadeAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOut,
+    ));
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.black,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+    );
+
+    _autoHideControls();
+  }
+
+  void _autoHideControls() {
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && _showControls) {
+        _hideControls();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pdfViewerController.dispose();
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  void _hideControls() {
+    if (mounted && _showControls) {
+      setState(() {
+        _showControls = false;
+      });
+      _fadeController.forward();
+    }
+  }
+
+  void _showControlsTemporarily() {
+    setState(() {
+      _showControls = true;
+    });
+    _fadeController.reverse();
+    _autoHideControls();
+  }
+
+  void _toggleLike() {
+    setState(() {
+      _isLiked = !_isLiked;
+    });
+    HapticFeedback.lightImpact();
+  }
+
+  void _toggleBookmark() {
+    setState(() {
+      _isBookmarked = !_isBookmarked;
+    });
+    HapticFeedback.lightImpact();
+  }
+
+  void _showTextSettings() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Reading Settings',
+                style: GoogleFonts.urbanist(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildTextSizeButton(0.8, 'A-'),
+                  _buildTextSizeButton(1.0, 'A'),
+                  _buildTextSizeButton(1.2, 'A+'),
+                ],
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextSizeButton(double scale, String label) {
+    return ElevatedButton(
+      onPressed: () {
+        // Implement text size change
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 24,
+          vertical: 12,
+        ),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.urbanist(
+          fontSize: 16 * scale,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverlayControls() {
+    return AnimatedBuilder(
+      animation: _fadeAnimation,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _fadeAnimation.value,
+          child: child,
+        );
+      },
+      child: Stack(
+        children: [
+          // Top gradient
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 120,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.7),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          
+          // Bottom gradient
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 150,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.7),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Top bar
+          Positioned(
+            top: MediaQuery.of(context).padding.top,
+            left: 0,
+            right: 0,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new),
+                    color: Colors.white,
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.font_download_outlined),
+                    color: Colors.white,
+                    onPressed: _showTextSettings,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Right side actions
+          Positioned(
+            right: 16,
+            bottom: 100,
+            child: Column(
+              children: [
+                _buildActionButton(
+                  icon: _isLiked ? Icons.favorite : Icons.favorite_border,
+                  label: '24.5K',
+                  color: _isLiked ? Colors.red : Colors.white,
+                  onTap: _toggleLike,
+                ),
+                const SizedBox(height: 24),
+                _buildActionButton(
+                  icon: Icons.comment_outlined,
+                  label: '1.2K',
+                  onTap: () => setState(() => _showComments = true),
+                ),
+                const SizedBox(height: 24),
+                _buildActionButton(
+                  icon: _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  label: 'Save',
+                  color: _isBookmarked ? AppColors.primary : Colors.white,
+                  onTap: _toggleBookmark,
+                ),
+                const SizedBox(height: 24),
+                _buildActionButton(
+                  icon: Icons.share_outlined,
+                  label: 'Share',
+                  onTap: () {
+                    // Implement share functionality
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          // Bottom info
+          Positioned(
+            left: 16,
+            right: 72,
+            bottom: 24,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.bookTitle,
+                  style: GoogleFonts.urbanist(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.authorName,
+                  style: GoogleFonts.urbanist(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Page ${_currentPage.toInt()} of ${_totalPages.toInt()}',
+                  style: GoogleFonts.urbanist(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    Color color = Colors.white,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.3),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 26),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: GoogleFonts.urbanist(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: GestureDetector(
+        onTapUp: (details) {
+          if (_showControls) {
+            _hideControls();
+          } else {
+            _showControlsTemporarily();
+          }
+        },
+        child: Stack(
+          children: [
+            // PDF Viewer with vertical scrolling
+            SfPdfViewer.asset(
+              widget.pdfPath,
+              key: _pdfViewerKey,
+              controller: _pdfViewerController,
+              onPageChanged: (details) {
+                setState(() {
+                  _currentPage = details.newPageNumber.toDouble();
+                });
+              },
+              onDocumentLoaded: (details) {
+                setState(() {
+                  _totalPages = details.document.pages.count.toDouble();
+                  _isLoading = false;
+                });
+              },
+              enableDoubleTapZooming: true,
+              canShowScrollHead: false,
+              canShowScrollStatus: false,
+              pageSpacing: 0,
+              scrollDirection: PdfScrollDirection.vertical, // Enable vertical scrolling
+              onZoomLevelChanged: (details) {
+                if (details.newZoomLevel == 1.0) {
+                  _showControlsTemporarily();
+                }
+              },
+            ),
+
+            // Loading indicator
+            if (_isLoading)
+              const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+
+            // Controls overlay
+            if (_showControls)
+              _buildOverlayControls(),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 
     File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\discover\discover_screen.dart
