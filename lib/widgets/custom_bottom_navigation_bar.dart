@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../utils/constants.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
   final int selectedIndex;
@@ -13,82 +14,64 @@ class CustomBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = [
-      {'icon': Icons.home_outlined, 'label': 'Home'},
-      {'icon': Icons.explore_outlined, 'label': 'Discover'},
-      {'icon': Icons.bookmark_outline, 'label': 'Wishlist'},
-      {'icon': Icons.shopping_cart_outlined, 'label': 'Cart'},
-      {'icon': Icons.person_outline, 'label': 'Profile'},
-    ];
-
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    
     return Container(
-      height: 65, // Reduced height
+      margin: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        bottom: bottomPadding + 2,
+      ),
+      height: 65,
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey.shade100),
-        ),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12), // Reduced padding
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(items.length, (index) {
-              final isSelected = selectedIndex == index;
-              return GestureDetector(
-                onTap: () => onTap(index),
-                behavior: HitTestBehavior.opaque,
-                child: SizedBox(
-                  width: 50, // Fixed width for each item
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (isSelected)
-                        Container(
-                          width: 4,
-                          height: 4,
-                          margin: const EdgeInsets.only(bottom: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFF7E21),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      Container(
-                        padding: const EdgeInsets.all(6), // Reduced padding
-                        decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFFFF7E21) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          items[index]['icon'] as IconData,
-                          color: isSelected ? Colors.white : Colors.grey,
-                          size: 20, // Reduced icon size
-                        ),
-                      ),
-                      const SizedBox(height: 2), // Reduced spacing
-                      Text(
-                        items[index]['label'] as String,
-                        style: GoogleFonts.urbanist(
-                          fontSize: 11, // Reduced font size
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                          color: isSelected ? const Color(0xFFFF7E21) : Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(0, Icons.home_rounded, 'Home'),
+          _buildNavItem(1, Icons.explore_outlined, 'Explore'),
+          _buildNavItem(2, Icons.bookmark_border_rounded, 'Bookmarks'),
+          _buildNavItem(3, Icons.person_outline_rounded, 'Profile'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String label) {
+    final isSelected = selectedIndex == index;
+    
+    return GestureDetector(
+      onTap: () => onTap(index),
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        height: 65,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppColors.primary : Colors.grey,
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.urbanist(
+                color: isSelected ? AppColors.primary : Colors.grey,
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
         ),
       ),
     );

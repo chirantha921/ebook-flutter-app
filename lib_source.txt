@@ -11,6 +11,9 @@ import 'services/firebase_service.dart';
 import 'utils/constants.dart';
 import 'utils/routes.dart';
 import 'screens/onboarding/splash_screen.dart';
+import 'screens/home/home_screen.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:audio_session/audio_session.dart';
 
 // Create global service instances
 final authService = AuthService();
@@ -50,6 +53,14 @@ Future<void> main() async {
     ),
   );
 
+  // Initialize audio session
+  final session = await AudioSession.instance;
+  await session.configure(const AudioSessionConfiguration(
+    avAudioSessionCategory: AVAudioSessionCategory.playback,
+    avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.duckOthers,
+    avAudioSessionMode: AVAudioSessionMode.spokenAudio,
+  ));
+
   runApp(const MyApp());
 }
 
@@ -59,106 +70,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Erabook',
+      title: 'eBook App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: AppColors.primary,
+        primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          centerTitle: true,
-          iconTheme: IconThemeData(color: Colors.black),
-          titleTextStyle: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        textTheme: GoogleFonts.interTextTheme(
-          Theme.of(context).textTheme,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 52),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            textStyle: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.black87,
-            side: BorderSide(color: Colors.grey.shade300),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            textStyle: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            textStyle: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-          border: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: AppColors.primary, width: 2),
-          ),
-          errorBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.red, width: 2),
-          ),
-          hintStyle: TextStyle(
-            color: Colors.grey.shade400,
-            fontSize: 16,
-          ),
-        ),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          primary: AppColors.primary,
-          secondary: AppColors.primary,
-        ),
       ),
-      home: const SplashScreen(),
-      onGenerateRoute: AppRouter.onGenerateRoute,
-      navigatorKey: AppRouter.navigatorKey,
-      // Add route observer for analytics if needed
-      navigatorObservers: [
-        RouteObserver<ModalRoute<void>>(),
-      ],
-      builder: (context, child) {
-        // Add any app-wide builders here (e.g., for overlays, error handling)
-        return MediaQuery(
-          // Prevent text scaling to maintain design consistency
-          data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
-          child: child!,
-        );
-      },
+      home: const HomeScreen(),
     );
   }
 }
@@ -2731,6 +2649,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
               style: GoogleFonts.urbanist(
                 fontSize: isDesktop ? 18 : 16,
                 fontWeight: FontWeight.w600,
+                color: Colors.white,
               ),
             ),
           ),
@@ -2859,16 +2778,329 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
 }
 
 
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\book\note_editor_screen.dart
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../utils/constants.dart';
+
+class Note {
+  final String content;
+  final int pageNumber;
+  final DateTime createdAt;
+
+  Note({
+    required this.content,
+    required this.pageNumber,
+    required this.createdAt,
+  });
+}
+
+class NoteEditorScreen extends StatefulWidget {
+  final int pageNumber;
+  final String bookTitle;
+
+  const NoteEditorScreen({
+    Key? key,
+    required this.pageNumber,
+    required this.bookTitle,
+  }) : super(key: key);
+
+  @override
+  State<NoteEditorScreen> createState() => _NoteEditorScreenState();
+}
+
+class _NoteEditorScreenState extends State<NoteEditorScreen> {
+  final List<Note> _notes = []; // TODO: Load notes from storage
+  
+  void _showAddNoteDialog() {
+    final TextEditingController noteController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Add Note',
+                style: GoogleFonts.urbanist(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: noteController,
+                maxLines: 5,
+                autofocus: true,
+                style: GoogleFonts.urbanist(fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: 'Write your note here...',
+                  hintStyle: GoogleFonts.urbanist(
+                    color: Colors.black38,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.urbanist(
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  TextButton(
+                    onPressed: () {
+                      if (noteController.text.trim().isNotEmpty) {
+                        setState(() {
+                          _notes.add(Note(
+                            content: noteController.text,
+                            pageNumber: widget.pageNumber,
+                            createdAt: DateTime.now(),
+                          ));
+                        });
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Text(
+                      'Save',
+                      style: GoogleFonts.urbanist(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).then((_) => noteController.dispose());
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          color: Colors.black,
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Notes',
+              style: GoogleFonts.urbanist(
+                color: Colors.black,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              widget.bookTitle,
+              style: GoogleFonts.urbanist(
+                color: Colors.black54,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: _notes.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.note_alt_outlined,
+                    size: 64,
+                    color: Colors.grey[300],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No notes yet',
+                    style: GoogleFonts.urbanist(
+                      fontSize: 18,
+                      color: Colors.grey[400],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Tap the + button to add a note',
+                    style: GoogleFonts.urbanist(
+                      fontSize: 14,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _notes.length,
+              itemBuilder: (context, index) {
+                final note = _notes[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                'Page ${note.pageNumber}',
+                                style: GoogleFonts.urbanist(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            PopupMenuButton(
+                              icon: const Icon(Icons.more_vert),
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  child: const Text('Edit'),
+                                  onTap: () {
+                                    // TODO: Implement edit
+                                  },
+                                ),
+                                PopupMenuItem(
+                                  child: const Text('Delete'),
+                                  onTap: () {
+                                    setState(() {
+                                      _notes.removeAt(index);
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          note.content,
+                          style: GoogleFonts.urbanist(fontSize: 16),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _formatDate(note.createdAt),
+                          style: GoogleFonts.urbanist(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddNoteDialog,
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+} 
+
+
     File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\book\purchase_screen.dart
 
 
     File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\screens\book\reader_screen.dart
-import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import 'package:syncfusion_flutter_core/theme.dart';
 import '../../utils/constants.dart';
+import 'dart:ui';
+import 'note_editor_screen.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/physics.dart';
+import 'package:lottie/lottie.dart';
+import '../../services/tts_manager.dart';
+import '../../services/eleven_labs_service.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'dart:io';
+
+class Note {
+  final String content;
+  final int pageNumber;
+  final DateTime timestamp;
+  final String? highlight;
+  final Color color;
+
+  Note({
+    required this.content,
+    required this.pageNumber,
+    required this.timestamp,
+    this.highlight,
+    this.color = Colors.yellow,
+  });
+}
+
+// Add this class before the ReaderScreen class
+class SmoothScrollBehavior extends ScrollBehavior {
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const BouncingScrollPhysics(
+      parent: AlwaysScrollableScrollPhysics(),
+    );
+  }
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.trackpad,
+      };
+}
 
 class ReaderScreen extends StatefulWidget {
   final String pdfPath;
@@ -2891,50 +3123,115 @@ class ReaderScreen extends StatefulWidget {
 class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderStateMixin {
   late PdfViewerController _pdfViewerController;
   final GlobalKey<SfPdfViewerState> _pdfViewerKey = GlobalKey();
-  
-  bool _isLiked = false;
+
   bool _isBookmarked = false;
   bool _showControls = true;
-  bool _showComments = false;
-  double _currentPage = 1;
-  double _totalPages = 0;
   bool _isLoading = true;
-  
+
+  final ValueNotifier<double> _currentPage = ValueNotifier<double>(1);
+  final ValueNotifier<double> _totalPages = ValueNotifier<double>(0);
+
   late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
+
+  int _selectedDesign = 0;
+
+  Color _tintColor = Colors.transparent;
+  bool _isNightMode = false;
+  double _fontSize = 1.0;
+
+  Offset? _tapPosition;
+  DateTime? _lastTapTime;
+  bool _isDragging = false;
+
+  Timer? _autoHideTimer;
+
+  bool _isTTSPlaying = false;
+  bool _showTTSControls = false;
+
+  bool _showNotesPanel = false;
+
+  final List<Note> _notes = [];
+  final TextEditingController _noteController = TextEditingController();
+  String? _selectedHighlight;
+  Color _noteColor = Colors.yellow;
+
+  late PageController _noteCardController;
+
+  bool get isDesktopLayout => MediaQuery.of(context).size.width >= 1024;
+
+  bool _showTintPanel = false;
+  final List<Map<String, dynamic>> _predefinedTints = [
+    {'name': 'None', 'color': Colors.transparent},
+    {'name': 'Sepia', 'color': Colors.brown.withOpacity(0.1)},
+    {'name': 'Warm', 'color': Colors.orange.withOpacity(0.1)},
+    {'name': 'Cool', 'color': Colors.blue.withOpacity(0.1)},
+    {'name': 'Green', 'color': Colors.green.withOpacity(0.1)},
+    {'name': 'Gray', 'color': Colors.grey.withOpacity(0.1)},
+  ];
+
+  bool _showTTSPanel = false;
+  double _speechRate = 1.0;
+  String _selectedVoice = 'Default';
+  final List<String> _availableVoices = ['Default', 'Male', 'Female', 'Natural'];
+  double _pitch = 1.0;
+  int _currentParagraph = 0;
+  bool _isAutoScroll = false;
+
+  bool _showFontPanel = false;
+  double _lineHeight = 1.5;
+  double _letterSpacing = 0.0;
+  String _selectedFont = 'Urbanist';
+  final List<String> _availableFonts = [
+    'Urbanist',
+    'Roboto',
+    'Open Sans',
+    'Lato',
+    'Merriweather',
+    'Playfair Display'
+  ];
+
+  // Add TTSManager
+  late TTSManager _ttsManager;
+
+  // Add this property at the top of the class
+  Timer? _selectionTimer;
 
   @override
   void initState() {
     super.initState();
     _pdfViewerController = PdfViewerController();
-    
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    ));
+    _ttsManager = TTSManager();
 
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.black,
-        systemNavigationBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemStatusBarContrastEnforced: false,
+        systemNavigationBarContrastEnforced: false,
       ),
     );
 
     _autoHideControls();
+    _noteCardController = PageController(viewportFraction: 0.85);
+
+    // Listen to TTS state changes
+    _ttsManager.playingState.listen((isPlaying) {
+      setState(() {
+        _isTTSPlaying = isPlaying;
+      });
+    });
   }
 
   void _autoHideControls() {
-    Future.delayed(const Duration(seconds: 3), () {
+    _autoHideTimer?.cancel();
+    
+    _autoHideTimer = Timer(const Duration(seconds: 5), () {
       if (mounted && _showControls) {
         _hideControls();
       }
@@ -2943,8 +3240,15 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
 
   @override
   void dispose() {
+    _selectionTimer?.cancel();
+    _ttsManager.dispose();
+    _autoHideTimer?.cancel();
     _pdfViewerController.dispose();
     _fadeController.dispose();
+    _currentPage.dispose();
+    _totalPages.dispose();
+    _noteController.dispose();
+    _noteCardController.dispose();
     super.dispose();
   }
 
@@ -2957,19 +3261,19 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
     }
   }
 
-  void _showControlsTemporarily() {
-    setState(() {
-      _showControls = true;
-    });
-    _fadeController.reverse();
-    _autoHideControls();
-  }
-
-  void _toggleLike() {
-    setState(() {
-      _isLiked = !_isLiked;
-    });
-    HapticFeedback.lightImpact();
+  void _toggleControls() {
+    if (mounted) {
+      setState(() {
+        _showControls = !_showControls;
+      });
+      if (_showControls) {
+        _fadeController.reverse();
+        _autoHideControls();
+      } else {
+        _fadeController.forward();
+        _autoHideTimer?.cancel();
+      }
+    }
   }
 
   void _toggleBookmark() {
@@ -2979,39 +3283,149 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
     HapticFeedback.lightImpact();
   }
 
-  void _showTextSettings() {
+  void _showReadingSettings() {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+      builder: (context) => Container(
+        padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomPadding),
+        decoration: BoxDecoration(
+          color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.95),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Reading Settings',
+              style: GoogleFonts.urbanist(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: _isNightMode ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildQuickSettingButton(
+                  icon: Icons.brightness_6,
+                  label: 'Brightness',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showNoteEditor();
+                  },
+                ),
+                _buildQuickSettingButton(
+                  icon: Icons.color_lens,
+                  label: 'Tint',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showColorPicker();
+                  },
+                ),
+                _buildQuickSettingButton(
+                  icon: Icons.text_fields,
+                  label: 'Font',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showFontSettings();
+                  },
+                ),
+                _buildQuickSettingButton(
+                  icon: Icons.nights_stay,
+                  label: 'Night Mode',
+                  onTap: () {
+                    setState(() => _isNightMode = !_isNightMode);
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showNoteEditor() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.95),
+            borderRadius: BorderRadius.circular(24),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Reading Settings',
+                'Add Note',
                 style: GoogleFonts.urbanist(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
                 ),
               ),
               const SizedBox(height: 24),
+              TextField(
+                maxLines: 5,
+                style: GoogleFonts.urbanist(
+                  color: _isNightMode ? Colors.white : Colors.black,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Write your note here...',
+                  hintStyle: GoogleFonts.urbanist(
+                    color: (_isNightMode ? Colors.white : Colors.black).withOpacity(0.5),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: _isNightMode ? Colors.white24 : Colors.black12,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  _buildTextSizeButton(0.8, 'A-'),
-                  _buildTextSizeButton(1.0, 'A'),
-                  _buildTextSizeButton(1.2, 'A+'),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.urbanist(
+                        color: Colors.grey,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  TextButton(
+                    onPressed: () {
+                      // TODO: Save note logic here
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      'Save',
+                      style: GoogleFonts.urbanist(
+                        color: AppColors.primary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -3019,181 +3433,153 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildTextSizeButton(double scale, String label) {
-    return ElevatedButton(
-      onPressed: () {
-        // Implement text size change
+  void _showColorPicker() {
+    if (isDesktopLayout) {
+      setState(() => _showTintPanel = true);
+    } else {
+      final bottomPadding = MediaQuery.of(context).padding.bottom;
+      
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) => Container(
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomPadding),
+          decoration: BoxDecoration(
+            color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.95),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Page Tint',
+                style: GoogleFonts.urbanist(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildTintOption(Colors.transparent, 'None'),
+                  _buildTintOption(Colors.amber.withOpacity(0.2), 'Warm'),
+                  _buildTintOption(Colors.blue.withOpacity(0.2), 'Cool'),
+                  _buildTintOption(Colors.green.withOpacity(0.2), 'Green'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _buildTintOption(Color color, String label) {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _tintColor = color;
+        });
+        Navigator.pop(context);
       },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 24,
-          vertical: 12,
-        ),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.urbanist(
-          fontSize: 16 * scale,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
+      child: Column(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: color,
+              border: Border.all(
+                color: _tintColor == color ? AppColors.primary : Colors.grey,
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: GoogleFonts.urbanist(
+              color: _isNightMode ? Colors.white : Colors.black,
+              fontSize: 14,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildOverlayControls() {
-    return AnimatedBuilder(
-      animation: _fadeAnimation,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _fadeAnimation.value,
-          child: child,
-        );
-      },
-      child: Stack(
-        children: [
-          // Top gradient
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 120,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.7),
-                    Colors.transparent,
-                  ],
+  void _showFontSettings() {
+    if (isDesktopLayout) {
+      setState(() => _showFontPanel = true);
+    } else {
+      final bottomPadding = MediaQuery.of(context).padding.bottom;
+      
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) => Container(
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomPadding),
+          decoration: BoxDecoration(
+            color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.95),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Font Settings',
+                style: GoogleFonts.urbanist(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
                 ),
               ),
-            ),
-          ),
-          
-          // Bottom gradient
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 150,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.7),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Top bar
-          Positioned(
-            top: MediaQuery.of(context).padding.top,
-            left: 0,
-            right: 0,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new),
-                    color: Colors.white,
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.font_download_outlined),
-                    color: Colors.white,
-                    onPressed: _showTextSettings,
-                  ),
+                  _buildFontButton(1.0, 'Medium'),
+                  _buildFontButton(1.2, 'Large'),
                 ],
               ),
-            ),
+            ],
           ),
+        ),
+      );
+    }
+  }
 
-          // Right side actions
-          Positioned(
-            right: 16,
-            bottom: 100,
-            child: Column(
-              children: [
-                _buildActionButton(
-                  icon: _isLiked ? Icons.favorite : Icons.favorite_border,
-                  label: '24.5K',
-                  color: _isLiked ? Colors.red : Colors.white,
-                  onTap: _toggleLike,
-                ),
-                const SizedBox(height: 24),
-                _buildActionButton(
-                  icon: Icons.comment_outlined,
-                  label: '1.2K',
-                  onTap: () => setState(() => _showComments = true),
-                ),
-                const SizedBox(height: 24),
-                _buildActionButton(
-                  icon: _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                  label: 'Save',
-                  color: _isBookmarked ? AppColors.primary : Colors.white,
-                  onTap: _toggleBookmark,
-                ),
-                const SizedBox(height: 24),
-                _buildActionButton(
-                  icon: Icons.share_outlined,
-                  label: 'Share',
-                  onTap: () {
-                    // Implement share functionality
-                  },
-                ),
-              ],
-            ),
+  Widget _buildFontButton(double size, String label) {
+    bool isSelected = _fontSize == size;
+    
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _fontSize = size;
+        });
+        Navigator.pop(context);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.grey,
           ),
-
-          // Bottom info
-          Positioned(
-            left: 16,
-            right: 72,
-            bottom: 24,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.bookTitle,
-                  style: GoogleFonts.urbanist(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.authorName,
-                  style: GoogleFonts.urbanist(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Page ${_currentPage.toInt()} of ${_totalPages.toInt()}',
-                  style: GoogleFonts.urbanist(
-                    color: Colors.white.withOpacity(0.7),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.urbanist(
+            color:
+                isSelected ? Colors.white : (_isNightMode ? Colors.white : Colors.black),
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
           ),
-        ],
+        ),
       ),
     );
   }
@@ -3230,61 +3616,2394 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
     );
   }
 
+  Widget _buildOverlayControls(double opacity) {
+    return IgnorePointer(
+      ignoring: opacity == 0.0,
+      child: AnimatedOpacity(
+        opacity: opacity,
+        duration: const Duration(milliseconds: 200),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 10,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+          height: 80,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new),
+                color: Colors.black,
+                onPressed: () => Navigator.pop(context),
+              ),
+              Expanded(
+                child: Center(
+                  child: Text(
+                    widget.bookTitle,
+                    style: GoogleFonts.urbanist(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.more_vert),
+                color: Colors.black,
+                onPressed: () {
+                  // Implement more options
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    if (_tapPosition == null || _lastTapTime == null || _isDragging) return;
+
+    final currentTime = DateTime.now();
+    final tapDuration = currentTime.difference(_lastTapTime!);
+    
+    // Only handle tap if it's a quick tap and not a drag
+    if (tapDuration.inMilliseconds < 200) {
+      _toggleControls();
+    }
+    
+    _tapPosition = null;
+    _lastTapTime = null;
+  }
+
+  // Add this method to find the first content page
+  Future<int> _findFirstContentPage() async {
+    int firstPage = 1;
+    bool foundContent = false;
+
+    while (!foundContent && firstPage <= _totalPages.value.toInt()) {
+      final text = await _extractPageText(firstPage);
+      if (text != null) {
+        // Skip pages with very little text (likely cover, TOC, etc.)
+        // and pages that mostly contain common front matter words
+        if (text.length > 100 && !_isFrontMatter(text)) {
+          foundContent = true;
+          break;
+        }
+      }
+      firstPage++;
+    }
+
+    return firstPage;
+  }
+
+  bool _isFrontMatter(String text) {
+    final lowerText = text.toLowerCase();
+    final frontMatterWords = [
+      'contents',
+      'copyright',
+      'dedication',
+      'acknowledgments',
+      'preface',
+      'introduction',
+      'table of contents',
+      'all rights reserved',
+    ];
+
+    int frontMatterCount = 0;
+    for (final word in frontMatterWords) {
+      if (lowerText.contains(word)) {
+        frontMatterCount++;
+      }
+    }
+
+    // If the page contains multiple front matter indicators, it's likely not content
+    return frontMatterCount >= 2;
+  }
+
+  // Update the text extraction method
+  Future<String?> _extractPageText(int pageNumber) async {
+    try {
+      final ByteData data = await rootBundle.load(widget.pdfPath);
+      final bytes = data.buffer.asUint8List();
+      final document = PdfDocument(inputBytes: bytes);
+
+      final page = document.pages[pageNumber - 1];
+      final PdfTextExtractor extractor = PdfTextExtractor(document);
+      String text = extractor.extractText(
+        startPageIndex: pageNumber - 1,
+        endPageIndex: pageNumber - 1,
+      );
+
+      // Clean up the text
+      text = text.replaceAll(RegExp(r'\s+'), ' ').trim(); // Remove extra whitespace
+      text = text.replaceAll(RegExp(r'[^\x20-\x7E\n]'), ''); // Remove non-printable characters
+
+      document.dispose();
+      return text;
+    } catch (e) {
+      debugPrint('Error extracting text: $e');
+      return null;
+    }
+  }
+
+  // Update the TTS play handler
+  void _handleTTSPlay() async {
+    try {
+      if (_ttsManager.isPlaying) {
+        _ttsManager.pause();
+        setState(() {
+          _isTTSPlaying = false;
+        });
+        return;
+      }
+
+      setState(() => _isTTSPlaying = true);
+
+      int currentPageNumber = _currentPage.value.toInt();
+
+      if (!_ttsManager.isInitialized) {
+        currentPageNumber = await _findFirstContentPage();
+        if (currentPageNumber != _currentPage.value.toInt()) {
+          _pdfViewerController.jumpToPage(currentPageNumber);
+        }
+      }
+
+      final text = await _extractPageText(currentPageNumber);
+      if (text != null && text.isNotEmpty) {
+        final charCount = text.length;
+        final cost = (charCount / 100000) * 1.0;
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Starting TTS for page $currentPageNumber (Est. cost: \$${cost.toStringAsFixed(3)})',
+              style: GoogleFonts.urbanist(),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+
+        await _ttsManager.startReading(
+          text: text,
+          pageNumber: currentPageNumber,
+          voiceId: ElevenLabsService.voiceIds['Rachel']!,
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'No readable text found on page $currentPageNumber',
+              style: GoogleFonts.urbanist(),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() => _isTTSPlaying = false);
+      }
+    } catch (e) {
+      debugPrint('Error in TTS: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Error starting TTS: ${e.toString()}',
+            style: GoogleFonts.urbanist(),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() => _isTTSPlaying = false);
+    }
+  }
+
+  void _handleTTSSkipForward() {
+    _ttsManager.skipForward();
+  }
+
+  void _handleTTSSkipBackward() {
+    _ttsManager.skipBackward();
+  }
+
+  void _handleTTSNextPage() {
+    if (_currentPage.value < _totalPages.value) {
+      final nextPage = _currentPage.value.toInt() + 1;
+      _pdfViewerController.jumpToPage(nextPage);
+      _handleTTSPlay(); // Start playing the next page
+    }
+  }
+
+  void _handleTTSPreviousPage() {
+    if (_currentPage.value > 1) {
+      final prevPage = _currentPage.value.toInt() - 1;
+      _pdfViewerController.jumpToPage(prevPage);
+      _handleTTSPlay(); // Start playing the previous page
+    }
+  }
+
+  // Update the TTS controls UI
+  Widget _buildTTSControls() {
+    return AnimatedSlide(
+      duration: const Duration(milliseconds: 300),
+      offset: _showControls ? Offset.zero : const Offset(0, 1),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.9),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: _isNightMode ? Colors.white24 : Colors.black12,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.skip_previous),
+              color: _isNightMode ? Colors.white : Colors.black,
+              onPressed: _handleTTSPreviousPage,
+            ),
+            IconButton(
+              icon: const Icon(Icons.replay_10),
+              color: _isNightMode ? Colors.white : Colors.black,
+              onPressed: _handleTTSSkipBackward,
+            ),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: _isLoading && _isTTSPlaying
+                ? Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  )
+                : IconButton(
+                    icon: Icon(
+                      _isTTSPlaying ? Icons.pause : Icons.play_arrow,
+                      color: Colors.white,
+                    ),
+                    onPressed: _handleTTSPlay,
+                  ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.forward_10),
+              color: _isNightMode ? Colors.white : Colors.black,
+              onPressed: _handleTTSSkipForward,
+            ),
+            IconButton(
+              icon: const Icon(Icons.skip_next),
+              color: _isNightMode ? Colors.white : Colors.black,
+              onPressed: _handleTTSNextPage,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _toggleTTS() {
+    if (isDesktopLayout) {
+      setState(() => _showTTSPanel = true);
+    } else {
+      setState(() {
+        _showTTSControls = !_showTTSControls;
+        if (!_showTTSControls) {
+          _ttsManager.reset(); // Reset TTS when closing controls
+        }
+        _showControls = true; // Keep bottom controls visible
+      });
+      HapticFeedback.lightImpact();
+    }
+  }
+
+  Widget NotesPanel({
+    required String bookTitle,
+    required int currentPage,
+    required VoidCallback onClose,
+  }) {
+    final pageNotes = _notes.where((note) => note.pageNumber == currentPage).toList();
+    
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height,
+      color: Colors.transparent,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Semi-transparent background
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: onClose,
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
+              ),
+            ),
+          ),
+
+          // Floating Notes Cards
+          if (pageNotes.isNotEmpty)
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.15,
+              left: 0,
+              right: 0,
+              height: 200,
+              child: PageView.builder(
+                controller: _noteCardController,
+                itemCount: pageNotes.length,
+                physics: const BouncingScrollPhysics(),
+                itemBuilder: (context, index) {
+                  final note = pageNotes[index];
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Transform.scale(
+                      scale: 0.9,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.98),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: note.color.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              right: -20,
+                              top: -20,
+                              child: Icon(
+                                Icons.format_quote,
+                                size: 100,
+                                color: note.color.withOpacity(0.1),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          color: note.color,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Note ${index + 1}',
+                                        style: GoogleFonts.urbanist(
+                                          color: _isNightMode ? Colors.white70 : Colors.black54,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline, size: 20),
+                                        onPressed: () {
+                                          setState(() => _notes.remove(note));
+                                          HapticFeedback.lightImpact();
+                                        },
+                                        color: Colors.red.withOpacity(0.8),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Expanded(
+                                    child: Text(
+                                      note.content,
+                                      style: GoogleFonts.urbanist(
+                                        color: _isNightMode ? Colors.white : Colors.black,
+                                        fontSize: 16,
+                                        height: 1.5,
+                                      ),
+                                      maxLines: 4,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          
+          // Notes Input Panel
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.45, // Made panel taller
+              decoration: BoxDecoration(
+                color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.98),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView( // Wrap Column in SingleChildScrollView for safety
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Drag Handle
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: (_isNightMode ? Colors.white : Colors.black).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Add Note',
+                            style: GoogleFonts.urbanist(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: _isNightMode ? Colors.white : Colors.black,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'Page $currentPage',
+                              style: GoogleFonts.urbanist(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: onClose,
+                            color: _isNightMode ? Colors.white70 : Colors.black54,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Note Input
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: (_isNightMode ? Colors.white12 : Colors.black.withOpacity(0.03)),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: TextField(
+                          controller: _noteController,
+                          maxLines: 3,
+                          style: GoogleFonts.urbanist(
+                            color: _isNightMode ? Colors.white : Colors.black,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Add a note for this page...',
+                            hintStyle: GoogleFonts.urbanist(
+                              color: (_isNightMode ? Colors.white60 : Colors.black45),
+                            ),
+                            contentPadding: const EdgeInsets.all(16),
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Color Picker
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        children: [
+                          for (Color color in [
+                            Colors.yellow,
+                            Colors.green,
+                            Colors.blue,
+                            Colors.pink,
+                            Colors.purple,
+                          ])
+                            Padding(
+                              padding: const EdgeInsets.only(right: 12),
+                              child: InkWell(
+                                onTap: () => setState(() => _noteColor = color),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: color.withOpacity(_noteColor == color ? 1 : 0.5),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: _noteColor == color 
+                                          ? Colors.white 
+                                          : Colors.transparent,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Save Button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_noteController.text.isNotEmpty) {
+                              setState(() {
+                                _notes.add(Note(
+                                  content: _noteController.text,
+                                  pageNumber: currentPage,
+                                  timestamp: DateTime.now(),
+                                  color: _noteColor,
+                                  highlight: _selectedHighlight,
+                                ));
+                                _noteController.clear();
+                              });
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Save Note',
+                            style: GoogleFonts.urbanist(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Add this method to handle highlighted text TTS
+  void _handleHighlightedTextTTS(String selectedText) async {
+    if (selectedText.isEmpty) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      if (_ttsManager.isPlaying) {
+        _ttsManager.pause();
+        setState(() {
+          _isTTSPlaying = false;
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final charCount = selectedText.length;
+      final cost = (charCount / 100000) * 1.0;
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Starting TTS for selected text (Est. cost: \$${cost.toStringAsFixed(3)})',
+            style: GoogleFonts.urbanist(),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      await _ttsManager.startReading(
+        text: selectedText,
+        pageNumber: _currentPage.value.toInt(),
+        voiceId: ElevenLabsService.voiceIds['Rachel']!,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _isTTSPlaying = true;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error in TTS: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Error starting TTS: ${e.toString()}',
+            style: GoogleFonts.urbanist(),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // Add this method to handle text selection with debounce
+  void _handleTextSelection(PdfTextSelectionChangedDetails details) {
+    if (details.selectedText == null || details.selectedText!.isEmpty) {
+      return;
+    }
+
+    // Delay showing our custom menu to prevent conflict with system menu
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (!mounted) return;
+
+      final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+      final RelativeRect position = RelativeRect.fromRect(
+        Rect.fromPoints(
+          details.globalSelectedRegion!.topLeft,
+          details.globalSelectedRegion!.bottomRight,
+        ),
+        Offset.zero & overlay.size,
+      );
+
+      showMenu(
+        context: context,
+        position: position,
+        color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.95),
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        constraints: const BoxConstraints(
+          minWidth: 150,
+          maxWidth: 250,
+        ),
+        items: [
+          PopupMenuItem(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.play_circle_outline,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Listen',
+                  style: GoogleFonts.urbanist(
+                    color: _isNightMode ? Colors.white : Colors.black,
+                  ),
+                ),
+              ],
+            ),
+            onTap: () => Future(() => _handleHighlightedTextTTS(details.selectedText!)),
+          ),
+          PopupMenuItem(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.note_add,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Add Note',
+                  style: GoogleFonts.urbanist(
+                    color: _isNightMode ? Colors.white : Colors.black,
+                  ),
+                ),
+              ],
+            ),
+            onTap: () => Future(() => setState(() {
+                  _selectedHighlight = details.selectedText;
+                  _showNotesPanel = true;
+                })),
+          ),
+        ],
+      );
+    });
+  }
+
+  // Update the PDF viewer to use the new handler
+  Widget _buildPdfViewer() {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textSelectionTheme: TextSelectionThemeData(
+          selectionColor: Colors.orange.withOpacity(0.3),
+          selectionHandleColor: Colors.orange,
+        ),
+      ),
+      child: SfPdfViewerTheme(
+        data: SfPdfViewerThemeData(
+          backgroundColor: _isNightMode ? Colors.black87 : Colors.white,
+        ),
+        child: ColorFiltered(
+          colorFilter: ColorFilter.mode(
+            _tintColor.withOpacity(0.1),
+            BlendMode.srcATop,
+          ),
+          child: Transform.scale(
+            scale: _fontSize,
+            alignment: Alignment.topCenter,
+            child: ScrollConfiguration(
+              behavior: SmoothScrollBehavior(),
+              child: SfPdfViewer.asset(
+                widget.pdfPath,
+                key: _pdfViewerKey,
+                controller: _pdfViewerController,
+                enableTextSelection: true,
+                onTextSelectionChanged: _handleTextSelection,
+                scrollDirection: PdfScrollDirection.vertical,
+                canShowScrollHead: false,
+                pageSpacing: 8,
+                pageLayoutMode: PdfPageLayoutMode.single,
+                enableDoubleTapZooming: true,
+                maxZoomLevel: 3,
+                enableDocumentLinkAnnotation: true,
+                interactionMode: PdfInteractionMode.selection,
+                onDocumentLoaded: (details) {
+                  _totalPages.value = details.document.pages.count.toDouble();
+                  setState(() => _isLoading = false);
+                },
+                onPageChanged: (details) {
+                  _currentPage.value = details.newPageNumber.toDouble();
+                  if (_showControls) {
+                    setState(() => _showControls = false);
+                  }
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: AppColors.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: GoogleFonts.urbanist(
+              color: _isNightMode ? Colors.white : Colors.black,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: GestureDetector(
-        onTapUp: (details) {
-          if (_showControls) {
-            _hideControls();
-          } else {
-            _showControlsTemporarily();
-          }
-        },
-        child: Stack(
-          children: [
-            // PDF Viewer with vertical scrolling
-            SfPdfViewer.asset(
-              widget.pdfPath,
-              key: _pdfViewerKey,
-              controller: _pdfViewerController,
-              onPageChanged: (details) {
-                setState(() {
-                  _currentPage = details.newPageNumber.toDouble();
-                });
-              },
-              onDocumentLoaded: (details) {
-                setState(() {
-                  _totalPages = details.document.pages.count.toDouble();
-                  _isLoading = false;
-                });
-              },
-              enableDoubleTapZooming: true,
-              canShowScrollHead: false,
-              canShowScrollStatus: false,
-              pageSpacing: 0,
-              scrollDirection: PdfScrollDirection.vertical, // Enable vertical scrolling
-              onZoomLevelChanged: (details) {
-                if (details.newZoomLevel == 1.0) {
-                  _showControlsTemporarily();
-                }
-              },
-            ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        statusBarIconBrightness: _isNightMode ? Brightness.light : Brightness.dark,
+        systemNavigationBarIconBrightness: _isNightMode ? Brightness.light : Brightness.dark,
+        systemStatusBarContrastEnforced: false,
+        systemNavigationBarContrastEnforced: false,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBody: true,
+        extendBodyBehindAppBar: true,
+        body: Container(
+          color: _isNightMode ? Colors.black : Colors.white,
+          child: isDesktopLayout ? _buildDesktopLayout() : _buildMobileLayout(),
+        ),
+      ),
+    );
+  }
 
-            // Loading indicator
-            if (_isLoading)
-              const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+  Widget _buildDesktopLayout() {
+    return Row(
+      children: [
+        // Left Sidebar
+        Container(
+          width: 300,
+          decoration: BoxDecoration(
+            color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.98),
+            border: Border(
+              right: BorderSide(
+                color: _isNightMode ? Colors.white24 : Colors.black12,
+              ),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Book Info Header
+              Container(
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 20,
+                  left: 24,
+                  right: 24,
+                  bottom: 24,
+                ),
+                child: Column(
+                  children: [
+                    if (widget.coverImageUrl.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          widget.coverImageUrl,
+                          height: 180,
+                          width: 120,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                    Text(
+                      widget.bookTitle,
+                      style: GoogleFonts.urbanist(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: _isNightMode ? Colors.white : Colors.black,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.authorName,
+                      style: GoogleFonts.urbanist(
+                        fontSize: 16,
+                        color: (_isNightMode ? Colors.white : Colors.black).withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // Quick Settings
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  children: [
+                    _buildDesktopQuickSetting(
+                      icon: Icons.note_add,
+                      label: 'Notes',
+                      onTap: () => setState(() => _showNotesPanel = true),
+                    ),
+                    _buildDesktopQuickSetting(
+                      icon: Icons.color_lens,
+                      label: 'Page Tint',
+                      onTap: _showColorPicker,
+                    ),
+                    _buildDesktopQuickSetting(
+                      icon: Icons.text_fields,
+                      label: 'Font',
+                      onTap: _showFontSettings,
+                    ),
+                    _buildDesktopQuickSetting(
+                      icon: Icons.record_voice_over,
+                      label: 'Text to Speech',
+                      onTap: _toggleTTS,
+                    ),
+                    _buildDesktopQuickSetting(
+                      icon: _isNightMode ? Icons.wb_sunny : Icons.nights_stay,
+                      label: _isNightMode ? 'Light Mode' : 'Dark Mode',
+                      onTap: () => setState(() => _isNightMode = !_isNightMode),
+                    ),
+                  ],
+                ),
+              ),
+              // Bottom Navigation
+              Container(
+                padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).padding.bottom + 16),
+                child: Column(
+                  children: [
+                    _buildPageSlider(),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () {
+                            if (_currentPage.value > 1) {
+                              _pdfViewerController.previousPage();
+                            }
+                          },
+                          color: _isNightMode ? Colors.white70 : Colors.black54,
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Page ${_currentPage.value.toInt()} of ${_totalPages.value.toInt()}',
+                            style: GoogleFonts.urbanist(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.arrow_forward),
+                          onPressed: () {
+                            if (_currentPage.value < _totalPages.value) {
+                              _pdfViewerController.nextPage();
+                            }
+                          },
+                          color: _isNightMode ? Colors.white70 : Colors.black54,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        // PDF Viewer with Notes and Tint Panel
+        Expanded(
+          child: Row(
+            children: [
+              // PDF Viewer
+              Expanded(
+                flex: (_showNotesPanel || _showTintPanel || _showTTSPanel || _showFontPanel) ? 3 : 1,
+                child: Stack(
+                  children: [
+                    _buildPdfViewer(),
+                    if (_isLoading)
+                      _buildLoadingIndicator(),
+                  ],
+                ),
+              ),
+              // Desktop Notes Panel
+              if (_showNotesPanel)
+                Container(
+                  width: 400,
+                  decoration: BoxDecoration(
+                    color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.98),
+                    border: Border(
+                      left: BorderSide(
+                        color: _isNightMode ? Colors.white24 : Colors.black12,
+                      ),
+                    ),
+                  ),
+                  child: _buildDesktopNotesPanel(),
+                ),
+              // Desktop Tint Panel
+              if (_showTintPanel)
+                Container(
+                  width: 400,
+                  decoration: BoxDecoration(
+                    color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.98),
+                    border: Border(
+                      left: BorderSide(
+                        color: _isNightMode ? Colors.white24 : Colors.black12,
+                      ),
+                    ),
+                  ),
+                  child: _buildDesktopTintPanel(),
+                ),
+              // Desktop TTS Panel
+              if (_showTTSPanel)
+                Container(
+                  width: 400,
+                  decoration: BoxDecoration(
+                    color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.98),
+                    border: Border(
+                      left: BorderSide(
+                        color: _isNightMode ? Colors.white24 : Colors.black12,
+                      ),
+                    ),
+                  ),
+                  child: _buildDesktopTTSPanel(),
+                ),
+              // Desktop Font Panel
+              if (_showFontPanel)
+                Container(
+                  width: 400,
+                  decoration: BoxDecoration(
+                    color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.98),
+                    border: Border(
+                      left: BorderSide(
+                        color: _isNightMode ? Colors.white24 : Colors.black12,
+                      ),
+                    ),
+                  ),
+                  child: _buildDesktopFontPanel(),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopNotesPanel() {
+    final currentPageNotes =
+        _notes.where((note) => note.pageNumber == _currentPage.value.toInt()).toList();
+    
+    return Column(
+      children: [
+        // Notes Header
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.98),
+            border: Border(
+              bottom: BorderSide(
+                color: _isNightMode ? Colors.white24 : Colors.black12,
+              ),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Notes',
+                style: GoogleFonts.urbanist(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => setState(() => _showNotesPanel = false),
+                color: _isNightMode ? Colors.white70 : Colors.black54,
+              ),
+            ],
+          ),
+        ),
+        
+        // Notes List and Input
+        Expanded(
+          child: Column(
+            children: [
+              // Existing Notes
+              Expanded(
+                child: currentPageNotes.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.note_alt_outlined,
+                              size: 48,
+                              color: (_isNightMode ? Colors.white : Colors.black).withOpacity(0.3),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No notes for this page',
+                              style: GoogleFonts.urbanist(
+                                color: (_isNightMode ? Colors.white : Colors.black).withOpacity(0.5),
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: currentPageNotes.length,
+                        itemBuilder: (context, index) {
+                          final note = currentPageNotes[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: note.color.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: note.color.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          color: note.color,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Note ${index + 1}',
+                                        style: GoogleFonts.urbanist(
+                                          color: note.color,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        '${note.timestamp.hour}:${note.timestamp.minute.toString().padLeft(2, '0')}',
+                                        style: GoogleFonts.urbanist(
+                                          color: (_isNightMode ? Colors.white : Colors.black)
+                                              .withOpacity(0.5),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline, size: 20),
+                                        onPressed: () {
+                                          setState(() => _notes.remove(note));
+                                          HapticFeedback.lightImpact();
+                                        },
+                                        color: Colors.red.withOpacity(0.8),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (note.highlight != null)
+                                  Container(
+                                    padding:
+                                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: note.color.withOpacity(0.1),
+                                      border: Border(
+                                        top: BorderSide(
+                                          color: note.color.withOpacity(0.3),
+                                        ),
+                                        bottom: BorderSide(
+                                          color: note.color.withOpacity(0.3),
+                                        ),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      note.highlight!,
+                                      style: GoogleFonts.urbanist(
+                                        color: (_isNightMode ? Colors.white : Colors.black)
+                                            .withOpacity(0.7),
+                                        fontSize: 14,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Text(
+                                    note.content,
+                                    style: GoogleFonts.urbanist(
+                                      color: _isNightMode ? Colors.white : Colors.black,
+                                      fontSize: 16,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
+              
+              // Note Input
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.98),
+                  border: Border(
+                    top: BorderSide(
+                      color: _isNightMode ? Colors.white24 : Colors.black12,
+                    ),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Color Selection
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (Color color in [
+                            Colors.yellow,
+                            Colors.green,
+                            Colors.blue,
+                            Colors.pink,
+                            Colors.purple,
+                          ])
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: InkWell(
+                                onTap: () => setState(() => _noteColor = color),
+                                child: Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: color.withOpacity(0.3),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color:
+                                          _noteColor == color ? color : Colors.transparent,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Note Input Field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: (_isNightMode ? Colors.white12 : Colors.black.withOpacity(0.03)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextField(
+                        controller: _noteController,
+                        maxLines: 3,
+                        style: GoogleFonts.urbanist(
+                          color: _isNightMode ? Colors.white : Colors.black,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Add a note...',
+                          hintStyle: GoogleFonts.urbanist(
+                            color: (_isNightMode ? Colors.white60 : Colors.black45),
+                          ),
+                          contentPadding: const EdgeInsets.all(16),
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Save Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_noteController.text.isNotEmpty) {
+                            setState(() {
+                              _notes.add(Note(
+                                content: _noteController.text,
+                                pageNumber: _currentPage.value.toInt(),
+                                timestamp: DateTime.now(),
+                                color: _noteColor,
+                                highlight: _selectedHighlight,
+                              ));
+                              _noteController.clear();
+                            });
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Save Note',
+                          style: GoogleFonts.urbanist(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopTintPanel() {
+    return Column(
+      children: [
+        // Panel Header
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.98),
+            border: Border(
+              bottom: BorderSide(
+                color: _isNightMode ? Colors.white24 : Colors.black12,
+              ),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Page Tint',
+                style: GoogleFonts.urbanist(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => setState(() => _showTintPanel = false),
+                color: _isNightMode ? Colors.white70 : Colors.black54,
+              ),
+            ],
+          ),
+        ),
+
+        // Tint Options
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              // Predefined Tints
+              Text(
+                'Predefined Tints',
+                style: GoogleFonts.urbanist(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: _predefinedTints.map((tint) {
+                  final bool isSelected = _tintColor == tint['color'];
+                  return InkWell(
+                    onTap: () {
+                      setState(() {
+                        _tintColor = tint['color'] as Color;
+                      });
+                    },
+            child: Column(
+              children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: tint['color'] as Color,
+                            border: Border.all(
+                              color: isSelected ? AppColors.primary : Colors.transparent,
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          tint['name'] as String,
+                          style: GoogleFonts.urbanist(
+                            color: _isNightMode ? Colors.white : Colors.black,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Custom Tint Opacity
+              Text(
+                'Tint Opacity',
+                style: GoogleFonts.urbanist(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SliderTheme(
+                data: SliderThemeData(
+                  trackHeight: 4,
+                  activeTrackColor: AppColors.primary,
+                  inactiveTrackColor: (_isNightMode ? Colors.white : Colors.black).withOpacity(0.1),
+                  thumbColor: AppColors.primary,
+                  overlayColor: AppColors.primary.withOpacity(0.2),
+                ),
+                child: Slider(
+                  value: _tintColor.opacity,
+                  min: 0.0,
+                  max: 0.3,
+                  onChanged: (value) {
+                    setState(() {
+                      _tintColor = _tintColor.withOpacity(value);
+                    });
+                  },
                 ),
               ),
 
-            // Controls overlay
-            if (_showControls)
-              _buildOverlayControls(),
-          ],
+              const SizedBox(height: 32),
+
+              // Reset Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _tintColor = Colors.transparent;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Reset Tint',
+                    style: GoogleFonts.urbanist(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopTTSPanel() {
+    return Column(
+      children: [
+        // Panel Header
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.98),
+            border: Border(
+              bottom: BorderSide(
+                color: _isNightMode ? Colors.white24 : Colors.black12,
+              ),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Text to Speech',
+                style: GoogleFonts.urbanist(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => setState(() => _showTTSPanel = false),
+                color: _isNightMode ? Colors.white70 : Colors.black54,
+              ),
+            ],
+          ),
+        ),
+
+        // TTS Controls
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              // Play Controls
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: (_isNightMode ? Colors.white12 : Colors.black.withOpacity(0.03)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.skip_previous),
+                      onPressed: _handleTTSPreviousPage,
+                      color: _isNightMode ? Colors.white70 : Colors.black54,
+                      iconSize: 32,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.replay_10),
+                      onPressed: _handleTTSSkipBackward,
+                      color: _isNightMode ? Colors.white70 : Colors.black54,
+                      iconSize: 32,
+                    ),
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: _isLoading && _isTTSPlaying
+                          ? Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            )
+                          : IconButton(
+                              icon: Icon(
+                                _isTTSPlaying ? Icons.pause : Icons.play_arrow,
+                                size: 32,
+                              ),
+                              onPressed: _handleTTSPlay,
+                              color: Colors.white,
+                            ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.forward_10),
+                      onPressed: _handleTTSSkipForward,
+                      color: _isNightMode ? Colors.white70 : Colors.black54,
+                      iconSize: 32,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.skip_next),
+                      onPressed: _handleTTSNextPage,
+                      color: _isNightMode ? Colors.white70 : Colors.black54,
+                      iconSize: 32,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Voice Selection
+              Text(
+                'ElevenLabs Voice',
+                style: GoogleFonts.urbanist(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Choose from premium AI voices',
+                style: GoogleFonts.urbanist(
+                  color: _isNightMode ? Colors.white60 : Colors.black45,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: ElevenLabsService.voiceIds.entries.map((entry) {
+                  final bool isSelected = _selectedVoice == entry.key;
+                  return InkWell(
+                    onTap: () {
+                      setState(() => _selectedVoice = entry.key);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+                        border: Border.all(
+                          color: isSelected ? AppColors.primary : (_isNightMode ? Colors.white24 : Colors.black12),
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.record_voice_over,
+                            size: 20,
+                            color: isSelected ? AppColors.primary : (_isNightMode ? Colors.white70 : Colors.black54),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            entry.key,
+                            style: GoogleFonts.urbanist(
+                              color: isSelected ? AppColors.primary : (_isNightMode ? Colors.white : Colors.black),
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Auto-scroll Toggle
+              SwitchListTile(
+                title: Text(
+                  'Auto-scroll Pages',
+                  style: GoogleFonts.urbanist(
+                    color: _isNightMode ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Text(
+                  'Automatically move to the next page while reading',
+                  style: GoogleFonts.urbanist(
+                    color: (_isNightMode ? Colors.white60 : Colors.black45),
+                    fontSize: 14,
+                  ),
+                ),
+                value: _isAutoScroll,
+                onChanged: (value) {
+                  setState(() => _isAutoScroll = value);
+                },
+                activeColor: AppColors.primary,
+              ),
+
+              const SizedBox(height: 32),
+
+              // Cost Estimation
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.3),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'ElevenLabs API Usage',
+                          style: GoogleFonts.urbanist(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Cost is approximately \$0.01 per 1,000 characters. The actual cost may vary based on the selected voice and text length.',
+                      style: GoogleFonts.urbanist(
+                        color: _isNightMode ? Colors.white70 : Colors.black54,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Reset Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedVoice = 'Rachel';
+                      _isAutoScroll = false;
+                      _ttsManager.reset();
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Reset TTS Settings',
+                    style: GoogleFonts.urbanist(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopFontPanel() {
+    return Column(
+      children: [
+        // Panel Header
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.98),
+            border: Border(
+              bottom: BorderSide(
+                color: _isNightMode ? Colors.white24 : Colors.black12,
+              ),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Font Settings',
+                style: GoogleFonts.urbanist(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => setState(() => _showFontPanel = false),
+                color: _isNightMode ? Colors.white70 : Colors.black54,
+              ),
+            ],
+          ),
+        ),
+
+        // Font Options
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              // Font Size
+              Text(
+                'Font Size',
+                style: GoogleFonts.urbanist(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.remove),
+                    onPressed: () {
+                      if (_fontSize > 0.8) {
+                        setState(() => _fontSize -= 0.1);
+                      }
+                    },
+                    color: _isNightMode ? Colors.white70 : Colors.black54,
+                  ),
+                  Expanded(
+                    child: SliderTheme(
+                      data: SliderThemeData(
+                        trackHeight: 4,
+                        activeTrackColor: AppColors.primary,
+                        inactiveTrackColor: (_isNightMode ? Colors.white : Colors.black).withOpacity(0.1),
+                        thumbColor: AppColors.primary,
+                        overlayColor: AppColors.primary.withOpacity(0.2),
+                      ),
+                      child: Slider(
+                        value: _fontSize,
+                        min: 0.8,
+                        max: 2.0,
+                        onChanged: (value) {
+                          setState(() => _fontSize = value);
+                        },
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () {
+                      if (_fontSize < 2.0) {
+                        setState(() => _fontSize += 0.1);
+                      }
+                    },
+                    color: _isNightMode ? Colors.white70 : Colors.black54,
+                  ),
+                ],
+              ),
+              Text(
+                'Preview Size: ${(_fontSize * 100).toInt()}%',
+                style: GoogleFonts.urbanist(
+                  color: _isNightMode ? Colors.white60 : Colors.black45,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 32),
+
+              // Font Family
+              Text(
+                'Font Family',
+                style: GoogleFonts.urbanist(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: _availableFonts.map((font) {
+                  final bool isSelected = _selectedFont == font;
+                  return InkWell(
+                    onTap: () {
+                      setState(() => _selectedFont = font);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+                        border: Border.all(
+                          color: isSelected ? AppColors.primary : (_isNightMode ? Colors.white24 : Colors.black12),
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Aa',
+                        style: GoogleFonts.getFont(
+                          font,
+                          color: isSelected ? AppColors.primary : (_isNightMode ? Colors.white : Colors.black),
+                          fontSize: 16,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Line Height
+              Text(
+                'Line Height',
+                style: GoogleFonts.urbanist(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SliderTheme(
+                data: SliderThemeData(
+                  trackHeight: 4,
+                  activeTrackColor: AppColors.primary,
+                  inactiveTrackColor: (_isNightMode ? Colors.white : Colors.black).withOpacity(0.1),
+                  thumbColor: AppColors.primary,
+                  overlayColor: AppColors.primary.withOpacity(0.2),
+                ),
+                child: Slider(
+                  value: _lineHeight,
+                  min: 1.0,
+                  max: 2.0,
+                  onChanged: (value) {
+                    setState(() => _lineHeight = value);
+                  },
+                ),
+              ),
+              Text(
+                'Line Height: ${_lineHeight.toStringAsFixed(1)}',
+                style: GoogleFonts.urbanist(
+                  color: _isNightMode ? Colors.white60 : Colors.black45,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 32),
+
+              // Letter Spacing
+              Text(
+                'Letter Spacing',
+                style: GoogleFonts.urbanist(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _isNightMode ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SliderTheme(
+                data: SliderThemeData(
+                  trackHeight: 4,
+                  activeTrackColor: AppColors.primary,
+                  inactiveTrackColor: (_isNightMode ? Colors.white : Colors.black).withOpacity(0.1),
+                  thumbColor: AppColors.primary,
+                  overlayColor: AppColors.primary.withOpacity(0.2),
+                ),
+                child: Slider(
+                  value: _letterSpacing,
+                  min: -1.0,
+                  max: 3.0,
+                  onChanged: (value) {
+                    setState(() => _letterSpacing = value);
+                  },
+                ),
+              ),
+              Text(
+                'Letter Spacing: ${_letterSpacing.toStringAsFixed(1)}',
+                style: GoogleFonts.urbanist(
+                  color: _isNightMode ? Colors.white60 : Colors.black45,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 32),
+
+              // Reset Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _fontSize = 1.0;
+                      _selectedFont = 'Urbanist';
+                      _lineHeight = 1.5;
+                      _letterSpacing = 0.0;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Reset Font Settings',
+                    style: GoogleFonts.urbanist(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopQuickSetting({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: _isNightMode ? Colors.white70 : Colors.black54,
+      ),
+      title: Text(
+        label,
+        style: GoogleFonts.urbanist(
+          color: _isNightMode ? Colors.white : Colors.black,
+          fontSize: 16,
+        ),
+      ),
+      onTap: onTap,
+      hoverColor: AppColors.primary.withOpacity(0.1),
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    return Stack(
+      children: [
+        _buildPdfViewer(),
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: _toggleControls,
+            behavior: HitTestBehavior.translucent,
+          ),
+        ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: AnimatedSlide(
+            duration: const Duration(milliseconds: 300),
+            offset: _showControls ? Offset.zero : const Offset(0, -1),
+            child: _buildTopBar(),
+          ),
+        ),
+        if (_showTTSControls)
+          Positioned(
+            bottom: _showControls 
+              ? MediaQuery.of(context).padding.bottom + 160
+              : MediaQuery.of(context).padding.bottom + 100,
+            left: 16,
+            right: 16,
+            child: _buildTTSControls(),
+          ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: AnimatedSlide(
+            duration: const Duration(milliseconds: 300),
+            offset: _showControls ? Offset.zero : const Offset(0, 1),
+            child: _buildBottomControls(),
+          ),
+        ),
+        if (_showNotesPanel)
+          NotesPanel(
+            bookTitle: widget.bookTitle,
+            currentPage: _currentPage.value.toInt(),
+            onClose: () => setState(() => _showNotesPanel = false),
+          ),
+        if (_isLoading) _buildLoadingIndicator(),
+      ],
+    );
+  }
+
+  Widget _buildTopBar() {
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          height: 100 + MediaQuery.of(context).padding.top,
+          decoration: BoxDecoration(
+            color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.8),
+            border: Border(
+              bottom: BorderSide(
+                color: _isNightMode ? Colors.white24 : Colors.black12,
+              ),
+            ),
+          ),
+          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new),
+                color: _isNightMode ? Colors.white : Colors.black,
+                onPressed: () => Navigator.pop(context),
+              ),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      widget.bookTitle,
+                      style: GoogleFonts.urbanist(
+                        color: _isNightMode ? Colors.white : Colors.black,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      widget.authorName,
+                      style: GoogleFonts.urbanist(
+                        color: (_isNightMode ? Colors.white : Colors.black).withOpacity(0.7),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: Icon(_isNightMode ? Icons.wb_sunny : Icons.nights_stay),
+                color: _isNightMode ? Colors.white : Colors.black,
+                onPressed: () => setState(() => _isNightMode = !_isNightMode),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomControls() {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: EdgeInsets.only(bottom: bottomPadding),
+          decoration: BoxDecoration(
+            color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.8),
+            border: Border(
+              top: BorderSide(
+                color: _isNightMode ? Colors.white24 : Colors.black12,
+              ),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: _buildPageSlider(),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildQuickSettingButton(
+                      icon: Icons.note_add,
+                      label: 'Notes',
+                      onTap: () => setState(() => _showNotesPanel = true),
+                    ),
+                    _buildQuickSettingButton(
+                      icon: Icons.color_lens,
+                      label: 'Tint',
+                      onTap: () => _showColorPicker(),
+                    ),
+                    _buildQuickSettingButton(
+                      icon: Icons.text_fields,
+                      label: 'Font',
+                      onTap: () => _showFontSettings(),
+                    ),
+                    _buildQuickSettingButton(
+                      icon: Icons.record_voice_over,
+                      label: 'Listen',
+                      onTap: _toggleTTS,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPageNumber(ValueNotifier<double> valueNotifier) {
+    return ValueListenableBuilder<double>(
+      valueListenable: valueNotifier,
+      builder: (context, value, _) {
+        return Text(
+          '${value.toInt()}',
+          style: GoogleFonts.urbanist(
+            color: _isNightMode ? Colors.white : Colors.black,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildQuickSettingButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.3),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.white, size: 26),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: GoogleFonts.urbanist(
+            color: _isNightMode ? Colors.white : Colors.black,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Visibility(
+      visible: _isLoading && !_isTTSPlaying,
+      child: Container(
+        color: (_isNightMode ? Colors.black : Colors.white).withOpacity(0.9),
+        child: Center(
+          child: SizedBox(
+            width: 200,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Lottie.asset(
+                  'assets/animations/book_loading.json',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.contain,
+                  repeat: true,
+                ),
+                Transform.translate(
+                  offset: const Offset(0, -20),
+                  child: Text(
+                    'Loading Book...',
+                    style: GoogleFonts.urbanist(
+                      color: Colors.black45,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPageSlider() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: _buildPageNumber(_currentPage),
+          ),
+          Expanded(
+            child: _totalPages.value > 0
+                ? SliderTheme(
+                    data: SliderThemeData(
+                      trackHeight: 4,
+                      activeTrackColor: AppColors.primary,
+                      inactiveTrackColor:
+                          (_isNightMode ? Colors.white : Colors.black).withOpacity(0.1),
+                      thumbColor: AppColors.primary,
+                      overlayColor: AppColors.primary.withOpacity(0.2),
+                    ),
+                    child: Slider(
+                      value: _currentPage.value,
+                      min: 1,
+                      max: _totalPages.value,
+                      onChanged: (value) {
+                        _currentPage.value = value;
+                        _pdfViewerController.jumpToPage(value.toInt());
+                      },
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: _buildPageNumber(_totalPages),
+          ),
+        ],
       ),
     );
   }
@@ -5328,37 +8047,56 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+    // Set up transparent navigation bar
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemStatusBarContrastEnforced: false,
+        systemNavigationBarContrastEnforced: false,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final isDesktopView = isDesktop(context);
 
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: Colors.white,
-      bottomNavigationBar: !isDesktopView
-          ? CustomBottomNavigationBar(
-              selectedIndex: _selectedIndex,
-              onTap: _onBottomNavTapped,
-            )
-          : null,
-      body: Row(
-        children: [
-          if (isDesktopView) _buildDesktopSidebar(),
-          Expanded(
-            // Show the selected page using IndexedStack
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: _pages,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarIconBrightness: Brightness.dark,
+        systemStatusBarContrastEnforced: false,
+        systemNavigationBarContrastEnforced: false,
+      ),
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: Colors.white,
+        extendBody: true, // Important for transparent navigation bar
+        body: Row(
+          children: [
+            if (isDesktopView) _buildDesktopSidebar(),
+            Expanded(
+              // Show the selected page using IndexedStack
+              child: IndexedStack(
+                index: _selectedIndex,
+                children: _pages,
+              ),
             ),
-          ),
-          if (isDesktopView) _buildDesktopRightPanel(),
-        ],
+            if (isDesktopView) _buildDesktopRightPanel(),
+          ],
+        ),
+        bottomNavigationBar: !isDesktopView
+            ? CustomBottomNavigationBar(
+                selectedIndex: _selectedIndex,
+                onTap: _onBottomNavTapped,
+              )
+            : null,
       ),
     );
   }
@@ -10481,6 +13219,9 @@ import 'walkthrough_screen.dart';
 import '../../services/firebase_service.dart';
 import '../../main.dart' show firebaseService, authService;
 import '../home/home_screen.dart';
+import '../onboarding/gender_selection_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -10529,28 +13270,55 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   Future<void> _initializeApp() async {
     try {
-      // Check if user is already logged in
-      final User? currentUser = authService.currentUser;
-      
-      // Simulate initialization delay
-      await Future.delayed(const Duration(seconds: 3));
+      // Wait for animation to play
+      await Future.delayed(const Duration(seconds: 2));
 
       if (!mounted) return;
 
-      if (currentUser != null) {
-        // Verify user data exists in Firestore
-        final doc = await firebaseService.getDocument('users', currentUser.uid);
-        
-        if (doc.exists) {
-          // Navigate to home if user data exists
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const HomeScreen()),
-          );
-          return;
+      // Get current user and check shared preferences
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final prefs = await SharedPreferences.getInstance();
+      final userData = prefs.getString('user_data');
+
+      if (currentUser != null || userData != null) {
+        // For Windows, we'll also check shared preferences
+        if (Platform.isWindows && userData != null) {
+          final userMap = json.decode(userData);
+          // Verify user data exists in Firestore
+          final doc = await firebaseService.getDocument('users', userMap['uid']);
+          
+          if (doc.exists) {
+            if (!mounted) return;
+            // Navigate to home if user data exists
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+            );
+            return;
+          }
+        } else {
+          // For other platforms, verify with Firebase
+          final doc = await firebaseService.getDocument('users', currentUser!.uid);
+          
+          if (doc.exists) {
+            if (!mounted) return;
+            // Navigate to home if user data exists
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+            );
+            return;
+          }
         }
+        
+        // If user exists but no Firestore data, send to gender selection
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const GenderSelectionScreen()),
+        );
+        return;
       }
 
       // Navigate to walkthrough if no valid session
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const WalkthroughScreen()),
       );
@@ -10711,8 +13479,10 @@ import 'gender_selection_screen.dart';
 import '../auth/signin_screen.dart';
 import '../../utils/constants.dart';
 import '../../services/auth_service.dart';
-import '../../main.dart' show authService;
+import '../../main.dart' show authService, firebaseService;
 import 'signup_screen.dart';
+import '../../services/firebase_service.dart';
+import '../../screens/home/home_screen.dart';
 
 class WalkthroughScreen extends StatefulWidget {
   const WalkthroughScreen({Key? key}) : super(key: key);
@@ -10732,6 +13502,9 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
       final UserCredential userCredential = await authService.signInWithGoogle();
       final User user = userCredential.user!;
       
+      // Check if user exists in Firestore
+      final userDoc = await firebaseService.getDocument('users', user.uid);
+      
       // Store user data
       await _storeUserData({
         'uid': user.uid,
@@ -10740,12 +13513,19 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
         'photoURL': user.photoURL,
       });
       
-      // Navigate to the next screen
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const GenderSelectionScreen()),
-        );
+        // If user exists, go to home screen, otherwise continue with onboarding
+        if (userDoc.exists) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const GenderSelectionScreen()),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -12096,6 +14876,136 @@ class AuthException implements Exception {
 }
 
 
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\services\eleven_labs_service.dart
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+
+class ElevenLabsService {
+  static const String _baseUrl = 'https://api.elevenlabs.io/v1';
+  static const String _apiKey = 'sk_c782ab4a95466757480108592b65243e48b657be04056339'; // Store this securely
+  
+  // Default voice IDs - you can change these or make them configurable
+  static const Map<String, String> voiceIds = {
+    'Rachel': 'SOYHLrjzK2X1ezoPC6cr',
+    'Drew': 'jsCqWAovK2LkecY7zXl4',
+    'Clyde': '2EiwWnXFnvU5JabPnv8n',
+    'Adam': 'pNInz6obpgDQGcFmaJgB',
+  };
+
+  // Cache for storing synthesized audio
+  final Map<String, List<int>> _audioCache = {};
+  String _selectedVoiceId = voiceIds['Rachel']!;
+
+  void setVoice(String voiceId) {
+    _selectedVoiceId = voiceId;
+  }
+
+  Future<List<Map<String, dynamic>>> getVoices() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/voices'),
+        headers: {
+          'xi-api-key': _apiKey,
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> voices = json.decode(response.body)['voices'];
+        return voices.cast<Map<String, dynamic>>();
+      }
+      throw Exception('Failed to load voices');
+    } catch (e) {
+      debugPrint('Error getting voices: $e');
+      return [];
+    }
+  }
+
+  Future<List<int>?> synthesizeText({
+    required String text,
+    required String cacheKey,
+    double stability = 0.5,
+    double similarityBoost = 0.5,
+  }) async {
+    // Check cache first
+    if (_audioCache.containsKey(cacheKey)) {
+      return _audioCache[cacheKey];
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/text-to-speech/$_selectedVoiceId'),
+        headers: {
+          'xi-api-key': _apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'text': text,
+          'model_id': 'eleven_monolingual_v1',
+          'voice_settings': {
+            'stability': stability,
+            'similarity_boost': similarityBoost,
+          },
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final audioData = response.bodyBytes;
+        // Cache the result
+        _audioCache[cacheKey] = audioData;
+        return audioData;
+      }
+      throw Exception('Failed to synthesize speech');
+    } catch (e) {
+      debugPrint('Error synthesizing speech: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> getVoiceSettings(String voiceId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/voices/$voiceId/settings'),
+        headers: {
+          'xi-api-key': _apiKey,
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+      throw Exception('Failed to get voice settings');
+    } catch (e) {
+      debugPrint('Error getting voice settings: $e');
+      return {};
+    }
+  }
+
+  // Clear cache for a specific page
+  void clearPageCache(String pageKey) {
+    _audioCache.remove(pageKey);
+  }
+
+  // Clear entire cache
+  void clearCache() {
+    _audioCache.clear();
+  }
+
+  // Get estimated character count for cost calculation
+  int getEstimatedCharacterCount(String text) {
+    return text.length;
+  }
+
+  // Calculate estimated cost (based on Eleven Labs pricing)
+  double calculateEstimatedCost(int characterCount) {
+    // Current pricing: $1 per 100,000 characters
+    return (characterCount / 100000) * 1.0;
+  }
+} 
+
+
     File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\services\firebase_service.dart
 // lib/services/firebase_service.dart
 import 'dart:typed_data';
@@ -12188,6 +15098,245 @@ class FirebaseException implements Exception {
 
 
     File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\services\storage_service.dart
+
+
+    File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\services\tts_manager.dart
+import 'dart:async';
+import 'dart:collection';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:audio_session/audio_session.dart';
+import 'eleven_labs_service.dart';
+
+class TTSManager {
+  final ElevenLabsService _elevenLabsService;
+  AudioPlayer? _audioPlayer;
+  
+  // Queue for managing pages to be read
+  final Queue<Map<String, dynamic>> _pageQueue = Queue<Map<String, dynamic>>();
+  bool _isProcessing = false;
+  bool _isInitialized = false;
+  
+  // Current state
+  bool _isPlaying = false;
+  int _currentPage = 1;
+  String _currentText = '';
+  
+  // Getters
+  bool get isInitialized => _isInitialized;
+  bool get isPlaying => _isPlaying;
+  
+  // Stream controllers
+  final _playingStateController = StreamController<bool>.broadcast();
+  final _progressController = StreamController<Duration>.broadcast();
+  final _currentPageController = StreamController<int>.broadcast();
+  
+  Stream<bool> get playingState => _playingStateController.stream;
+  Stream<Duration> get progress => _progressController.stream;
+  Stream<int> get currentPage => _currentPageController.stream;
+  
+  TTSManager() : _elevenLabsService = ElevenLabsService() {
+    _initAudioPlayer();
+  }
+  
+  Future<void> _initAudioPlayer() async {
+    try {
+      _audioPlayer = AudioPlayer();
+      await _setupAudioPlayer();
+    } catch (e) {
+      debugPrint('Error initializing audio player: $e');
+      // Try to reinitialize after a delay
+      await Future.delayed(const Duration(seconds: 1));
+      _initAudioPlayer();
+    }
+  }
+  
+  Future<void> _setupAudioPlayer() async {
+    if (_audioPlayer == null) return;
+    
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration(
+        avAudioSessionCategory: AVAudioSessionCategory.playback,
+        avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.duckOthers,
+        avAudioSessionMode: AVAudioSessionMode.spokenAudio,
+      ));
+      
+      _audioPlayer!.positionStream.listen((position) {
+        _progressController.add(position);
+      });
+      
+      _audioPlayer!.playerStateStream.listen((state) {
+        if (state.processingState == ProcessingState.completed) {
+          _playNext();
+        }
+      });
+      
+      _isInitialized = true;
+    } catch (e) {
+      debugPrint('Error setting up audio player: $e');
+    }
+  }
+  
+  Future<void> startReading({
+    required String text,
+    required int pageNumber,
+    required String voiceId,
+  }) async {
+    if (_audioPlayer == null) {
+      await _initAudioPlayer();
+    }
+    
+    _currentPage = pageNumber;
+    _currentText = text;
+    _elevenLabsService.setVoice(voiceId);
+    
+    // Calculate estimated cost
+    final charCount = _elevenLabsService.getEstimatedCharacterCount(text);
+    final cost = _elevenLabsService.calculateEstimatedCost(charCount);
+    
+    debugPrint('Estimated cost for page $pageNumber: \$$cost');
+    
+    // Add to queue
+    _pageQueue.add({
+      'text': text,
+      'page': pageNumber,
+      'cacheKey': 'page_$pageNumber',
+    });
+    
+    if (!_isProcessing) {
+      await _processQueue();
+    }
+  }
+  
+  Future<void> _processQueue() async {
+    if (_pageQueue.isEmpty) {
+      _isProcessing = false;
+      return;
+    }
+    
+    _isProcessing = true;
+    final page = _pageQueue.first;
+    
+    try {
+      final audioData = await _elevenLabsService.synthesizeText(
+        text: page['text'],
+        cacheKey: page['cacheKey'],
+      );
+      
+      if (audioData != null) {
+        await _playAudio(audioData);
+        _pageQueue.removeFirst();
+      }
+    } catch (e) {
+      debugPrint('Error processing TTS: $e');
+      rethrow; // Propagate error to handle in UI
+    }
+  }
+  
+  Future<void> _playAudio(List<int> audioData) async {
+    if (_audioPlayer == null) return;
+    
+    try {
+      final audioBytes = Uint8List.fromList(audioData);
+      final audioSource = BytesAudioSource(audioBytes);
+      
+      await _audioPlayer!.setAudioSource(audioSource);
+      await _audioPlayer!.play();
+      _isPlaying = true;
+      _playingStateController.add(true);
+    } catch (e) {
+      debugPrint('Error playing audio: $e');
+      _isPlaying = false;
+      _playingStateController.add(false);
+    }
+  }
+  
+  Future<void> _playNext() async {
+    if (_pageQueue.isNotEmpty) {
+      _processQueue();
+    } else {
+      _isPlaying = false;
+      _playingStateController.add(false);
+    }
+  }
+  
+  Future<void> pause() async {
+    await _audioPlayer?.pause();
+    _isPlaying = false;
+    _playingStateController.add(false);
+  }
+  
+  Future<void> resume() async {
+    await _audioPlayer?.play();
+    _isPlaying = true;
+    _playingStateController.add(true);
+  }
+  
+  Future<void> stop() async {
+    await _audioPlayer?.stop();
+    _pageQueue.clear();
+    _isPlaying = false;
+    _playingStateController.add(false);
+  }
+  
+  Future<void> seekTo(Duration position) async {
+    await _audioPlayer?.seek(position);
+  }
+  
+  Future<void> skipForward() async {
+    if (_audioPlayer == null) return;
+    final position = _audioPlayer!.position;
+    await seekTo(position + const Duration(seconds: 10));
+  }
+  
+  Future<void> skipBackward() async {
+    if (_audioPlayer == null) return;
+    final position = _audioPlayer!.position;
+    await seekTo(position - const Duration(seconds: 10));
+  }
+  
+  void dispose() {
+    _audioPlayer?.dispose();
+    _playingStateController.close();
+    _progressController.close();
+    _currentPageController.close();
+  }
+  
+  void reset() {
+    _isInitialized = false;
+    _pageQueue.clear();
+    _isProcessing = false;
+    _isPlaying = false;
+    _audioPlayer?.stop();
+  }
+}
+
+class BytesAudioSource extends StreamAudioSource {
+  final Uint8List _buffer;
+  
+  BytesAudioSource(this._buffer);
+  
+  @override
+  Future<StreamAudioResponse> request([int? start, int? end]) async {
+    start ??= 0;
+    end ??= _buffer.length;
+    
+    return StreamAudioResponse(
+      sourceLength: _buffer.length,
+      contentLength: end - start,
+      offset: start,
+      stream: Stream.value(_buffer.sublist(start, end)),
+      contentType: 'audio/mp3',
+    );
+  }
+  
+  @override
+  Future<void> close() async {
+    // No resources to release
+  }
+} 
 
 
     File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\utils\constants.dart
@@ -12321,6 +15470,7 @@ class Routes {
     File: C:\Users\LENOVO\Desktop\flutter projects\ebook_app\lib\widgets\custom_bottom_navigation_bar.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../utils/constants.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
   final int selectedIndex;
@@ -12334,82 +15484,64 @@ class CustomBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = [
-      {'icon': Icons.home_outlined, 'label': 'Home'},
-      {'icon': Icons.explore_outlined, 'label': 'Discover'},
-      {'icon': Icons.bookmark_outline, 'label': 'Wishlist'},
-      {'icon': Icons.shopping_cart_outlined, 'label': 'Cart'},
-      {'icon': Icons.person_outline, 'label': 'Profile'},
-    ];
-
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    
     return Container(
-      height: 65, // Reduced height
+      margin: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        bottom: bottomPadding + 2,
+      ),
+      height: 65,
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey.shade100),
-        ),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12), // Reduced padding
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(items.length, (index) {
-              final isSelected = selectedIndex == index;
-              return GestureDetector(
-                onTap: () => onTap(index),
-                behavior: HitTestBehavior.opaque,
-                child: SizedBox(
-                  width: 50, // Fixed width for each item
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (isSelected)
-                        Container(
-                          width: 4,
-                          height: 4,
-                          margin: const EdgeInsets.only(bottom: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFF7E21),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      Container(
-                        padding: const EdgeInsets.all(6), // Reduced padding
-                        decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFFFF7E21) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          items[index]['icon'] as IconData,
-                          color: isSelected ? Colors.white : Colors.grey,
-                          size: 20, // Reduced icon size
-                        ),
-                      ),
-                      const SizedBox(height: 2), // Reduced spacing
-                      Text(
-                        items[index]['label'] as String,
-                        style: GoogleFonts.urbanist(
-                          fontSize: 11, // Reduced font size
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                          color: isSelected ? const Color(0xFFFF7E21) : Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(0, Icons.home_rounded, 'Home'),
+          _buildNavItem(1, Icons.explore_outlined, 'Explore'),
+          _buildNavItem(2, Icons.bookmark_border_rounded, 'Bookmarks'),
+          _buildNavItem(3, Icons.person_outline_rounded, 'Profile'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String label) {
+    final isSelected = selectedIndex == index;
+    
+    return GestureDetector(
+      onTap: () => onTap(index),
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        height: 65,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppColors.primary : Colors.grey,
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.urbanist(
+                color: isSelected ? AppColors.primary : Colors.grey,
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -8,6 +8,9 @@ import 'walkthrough_screen.dart';
 import '../../services/firebase_service.dart';
 import '../../main.dart' show firebaseService, authService;
 import '../home/home_screen.dart';
+import '../onboarding/gender_selection_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -56,28 +59,55 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   Future<void> _initializeApp() async {
     try {
-      // Check if user is already logged in
-      final User? currentUser = authService.currentUser;
-      
-      // Simulate initialization delay
-      await Future.delayed(const Duration(seconds: 3));
+      // Wait for animation to play
+      await Future.delayed(const Duration(seconds: 2));
 
       if (!mounted) return;
 
-      if (currentUser != null) {
-        // Verify user data exists in Firestore
-        final doc = await firebaseService.getDocument('users', currentUser.uid);
-        
-        if (doc.exists) {
-          // Navigate to home if user data exists
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const HomeScreen()),
-          );
-          return;
+      // Get current user and check shared preferences
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final prefs = await SharedPreferences.getInstance();
+      final userData = prefs.getString('user_data');
+
+      if (currentUser != null || userData != null) {
+        // For Windows, we'll also check shared preferences
+        if (Platform.isWindows && userData != null) {
+          final userMap = json.decode(userData);
+          // Verify user data exists in Firestore
+          final doc = await firebaseService.getDocument('users', userMap['uid']);
+          
+          if (doc.exists) {
+            if (!mounted) return;
+            // Navigate to home if user data exists
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+            );
+            return;
+          }
+        } else {
+          // For other platforms, verify with Firebase
+          final doc = await firebaseService.getDocument('users', currentUser!.uid);
+          
+          if (doc.exists) {
+            if (!mounted) return;
+            // Navigate to home if user data exists
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+            );
+            return;
+          }
         }
+        
+        // If user exists but no Firestore data, send to gender selection
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const GenderSelectionScreen()),
+        );
+        return;
       }
 
       // Navigate to walkthrough if no valid session
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const WalkthroughScreen()),
       );

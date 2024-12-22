@@ -436,6 +436,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
               style: GoogleFonts.urbanist(
                 fontSize: isDesktop ? 18 : 16,
                 fontWeight: FontWeight.w600,
+                color: Colors.white,
               ),
             ),
           ),

@@ -86,37 +86,56 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+    // Set up transparent navigation bar
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemStatusBarContrastEnforced: false,
+        systemNavigationBarContrastEnforced: false,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final isDesktopView = isDesktop(context);
 
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: Colors.white,
-      bottomNavigationBar: !isDesktopView
-          ? CustomBottomNavigationBar(
-              selectedIndex: _selectedIndex,
-              onTap: _onBottomNavTapped,
-            )
-          : null,
-      body: Row(
-        children: [
-          if (isDesktopView) _buildDesktopSidebar(),
-          Expanded(
-            // Show the selected page using IndexedStack
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: _pages,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarIconBrightness: Brightness.dark,
+        systemStatusBarContrastEnforced: false,
+        systemNavigationBarContrastEnforced: false,
+      ),
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: Colors.white,
+        extendBody: true, // Important for transparent navigation bar
+        body: Row(
+          children: [
+            if (isDesktopView) _buildDesktopSidebar(),
+            Expanded(
+              // Show the selected page using IndexedStack
+              child: IndexedStack(
+                index: _selectedIndex,
+                children: _pages,
+              ),
             ),
-          ),
-          if (isDesktopView) _buildDesktopRightPanel(),
-        ],
+            if (isDesktopView) _buildDesktopRightPanel(),
+          ],
+        ),
+        bottomNavigationBar: !isDesktopView
+            ? CustomBottomNavigationBar(
+                selectedIndex: _selectedIndex,
+                onTap: _onBottomNavTapped,
+              )
+            : null,
       ),
     );
   }

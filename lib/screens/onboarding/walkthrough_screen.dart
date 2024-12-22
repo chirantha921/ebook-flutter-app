@@ -10,8 +10,10 @@ import 'gender_selection_screen.dart';
 import '../auth/signin_screen.dart';
 import '../../utils/constants.dart';
 import '../../services/auth_service.dart';
-import '../../main.dart' show authService;
+import '../../main.dart' show authService, firebaseService;
 import 'signup_screen.dart';
+import '../../services/firebase_service.dart';
+import '../../screens/home/home_screen.dart';
 
 class WalkthroughScreen extends StatefulWidget {
   const WalkthroughScreen({Key? key}) : super(key: key);
@@ -31,6 +33,9 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
       final UserCredential userCredential = await authService.signInWithGoogle();
       final User user = userCredential.user!;
       
+      // Check if user exists in Firestore
+      final userDoc = await firebaseService.getDocument('users', user.uid);
+      
       // Store user data
       await _storeUserData({
         'uid': user.uid,
@@ -39,12 +44,19 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
         'photoURL': user.photoURL,
       });
       
-      // Navigate to the next screen
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const GenderSelectionScreen()),
-        );
+        // If user exists, go to home screen, otherwise continue with onboarding
+        if (userDoc.exists) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const GenderSelectionScreen()),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

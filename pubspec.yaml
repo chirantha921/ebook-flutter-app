@@ -12,14 +12,15 @@ dependencies:
   cupertino_icons: ^1.0.6
   
   # Firebase
-  firebase_core: ^2.27.1
-  firebase_auth: ^4.17.9
-  cloud_firestore: ^4.15.9
-  firebase_storage: ^11.6.10
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+  firebase_storage: ^11.5.6
   google_sign_in: ^6.2.1
   
-  # PDF Viewer
+  # PDF Viewer & Processing
   syncfusion_flutter_pdfviewer: ^24.1.41
+  syncfusion_flutter_pdf: ^24.1.41
   
   # Image Handling
   image_picker: ^1.0.7
@@ -36,6 +37,10 @@ dependencies:
   lottie: ^2.7.0
   http: ^1.2.0
   
+  # Audio
+  just_audio: ^0.9.36
+  audio_session: ^0.1.18
+  
   # Storage and Data
   shared_preferences: ^2.2.0
   sqflite: ^2.3.2
@@ -50,15 +55,17 @@ dependencies:
   # UI Components
   carousel_slider: ^4.2.1
   flutter_rating_bar: ^4.0.1
-  pdfx: ^2.6.0
-  photo_view: ^0.14.0
-  device_info_plus: ^9.1.2
+  photo_view: ^0.15.0
+  device_info_plus: ^9.0.3
 
   # Vector Math
   vector_math: ^2.1.4
 
   # Syncfusion Core
   syncfusion_flutter_core: ^24.1.41
+
+  # Card Swiper
+  flutter_card_swiper: ^6.0.0
 
 dev_dependencies:
   flutter_test:
