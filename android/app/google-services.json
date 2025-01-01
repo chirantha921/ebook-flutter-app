@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "94890877862",
+    "project_id": "booksharing-23036",
+    "storage_bucket": "booksharing-23036.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:94890877862:android:095f2a33f0c5713299a567",
+        "android_client_info": {
+          "package_name": "com.ihyaeforum.mayastoron"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBr4Apt608RDy5K4ovbXBmbHbLGx2BaZEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
