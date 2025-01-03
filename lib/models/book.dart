@@ -1,18 +1,37 @@
 // lib/models/book.dart
 import 'package:flutter/material.dart';
 
+
 class Book {
   final String title;
   final double rating;
   final double? price; // Make price optional
+  final List<String>? genres;
 
-  Book({
+    Book({
     required this.title,
     required this.rating,
-    this.price, // Remove required keyword
+    this.price,
+    this.genres,
   });
 
-  String get formattedPrice => price?.toStringAsFixed(2) ?? '';
+  factory Book.fromMap(Map<String, dynamic> data) {
+    return Book(
+      title: data['title'],
+      rating: data['rating']?.toDouble() ?? 0.0,
+      price: data['price']?.toDouble(),
+      genres: List<String>.from(data['genres'] ?? []),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'rating': rating,
+      'price': price,
+      'genres': genres,
+    };
+  }
 }
 
 class Genre {
