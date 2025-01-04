@@ -30,7 +30,33 @@ String language;
     this.publisher = 'Unknown',
 
   });
+  factory Book.fromMap(Map<String, dynamic> data) {
+    return Book(
+      title: data['title'],
+      rating: data['rating']?.toDouble() ?? 0.0,
+      price: data['price']?.toDouble(),
+      author: data['author'],
+      image: data['image'],
+      pages: data['pages'],
+      description: data['description'],
+      language: data['language'],
+      publisher: data['publisher'],
+    );
+  }
 
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'rating': rating,
+      'price': price,
+      'image': image,
+      'description': description,
+      'author':author,
+      'language':language,
+      'publisher':publisher,
+      'pages':pages,
+    };
+  }
   String get formattedPrice => price?.toStringAsFixed(2) ?? '';
 
   // get publisher => null;
