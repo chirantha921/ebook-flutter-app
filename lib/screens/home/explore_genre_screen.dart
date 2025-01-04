@@ -4,73 +4,93 @@ import '../../utils/constants.dart';
 
 class ExploreGenreScreen extends StatelessWidget {
   const ExploreGenreScreen({Key? key}) : super(key: key);
+  Color hexToColor(String hex){
+    return Color(int.parse(hex.replaceFirst("#", '0xFF')));
+  }
 
-  final List<Map<String, String>> genres = const [
+  final List<Map<String, String>> genres = const[
     {
       "name": "Romance",
       "image": "https://example.com/images/romance.jpg",
+      "color": "#FFC0CB", // Pink
     },
     {
       "name": "Thriller",
       "image": "https://example.com/images/thriller.jpg",
+      "color": "#8B0000", // Dark Red
     },
     {
       "name": "Inspiration",
       "image": "https://example.com/images/inspiration.jpg",
+      "color": "#FFD700", // Gold
     },
     {
       "name": "Fantasy",
       "image": "https://example.com/images/fantasy.jpg",
+      "color": "#9370DB", // Medium Purple
     },
     {
       "name": "Sci-Fi",
       "image": "https://example.com/images/scifi.jpg",
+      "color": "#00CED1", // Dark Turquoise
     },
     {
       "name": "Horror",
       "image": "https://example.com/images/horror.jpg",
+      "color": "#2F4F4F", // Dark Slate Gray
     },
     {
       "name": "Mystery",
       "image": "https://example.com/images/mystery.jpg",
+      "color": "#4B0082", // Indigo
     },
     {
       "name": "Psychology",
       "image": "https://example.com/images/psychology.jpg",
+      "color": "#4682B4", // Steel Blue
     },
     {
       "name": "Comedy",
       "image": "https://example.com/images/comedy.jpg",
+      "color": "#FFA500", // Orange
     },
     {
       "name": "Action",
       "image": "https://example.com/images/action.jpg",
+      "color": "#FF4500", // Orange Red
     },
     {
       "name": "Adventure",
       "image": "https://example.com/images/adventure.jpg",
+      "color": "#32CD32", // Lime Green
     },
     {
       "name": "Comics",
       "image": "https://example.com/images/comics.jpg",
+      "color": "#FFDAB9", // Peach Puff
     },
     {
       "name": "Children's",
       "image": "https://example.com/images/children.jpg",
+      "color": "#FF69B4", // Hot Pink
     },
     {
       "name": "Art & Photography",
       "image": "https://example.com/images/art_photography.jpg",
+      "color": "#C71585", // Medium Violet Red
     },
     {
       "name": "Food & Drink",
       "image": "https://example.com/images/food_drink.jpg",
+      "color": "#8B4513", // Saddle Brown
     },
     {
       "name": "Biography",
       "image": "https://example.com/images/biography.jpg",
+      "color": "#708090", // Slate Gray
     },
   ];
+
 
   @override
   Widget build(BuildContext context) {
@@ -132,6 +152,7 @@ class ExploreGenreScreen extends StatelessWidget {
             return _buildGenreCard(
               name: genre["name"]!,
               imageUrl: genre["image"]!,
+              color: genre["color"],
             );
           },
         ),
@@ -139,7 +160,7 @@ class ExploreGenreScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGenreCard({required String name, required String imageUrl}) {
+  Widget _buildGenreCard({required String name, required String imageUrl, required String? color}) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Stack(
@@ -159,7 +180,10 @@ class ExploreGenreScreen extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.black.withOpacity(0.3), Colors.black.withOpacity(0.1)],
+                colors: [
+                  color != null ? hexToColor(color).withOpacity(0.8) : Colors.black.withOpacity(0.8),
+                  color != null ? hexToColor(color).withOpacity(0.3) : Colors.black.withOpacity(0.3),
+                ],
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
               ),
