@@ -9,11 +9,15 @@ class Book {
   int pages = 0;
   String releaseDate;
   String publisher = 'Unknown';
-String language;
+  String language;
   String author = 'Unknown';
   String description = 'No description available';
-  String image =
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGh5WFH8TOIfRKxUrIgJZoDCs1yvQ4hIcppw&s';
+  String image = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGh5WFH8TOIfRKxUrIgJZoDCs1yvQ4hIcppw&s';
+
+  @override
+  String toString() {
+    return 'Book(title: $title, rating: $rating)';
+  }
 
   Book({
     required this.title,

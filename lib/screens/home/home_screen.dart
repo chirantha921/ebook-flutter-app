@@ -40,15 +40,9 @@ final genres = [
 // Update the sample book data - remove prices
 final recommendedBooks = <Book>[];
 
-final purchasedBooks = <Book>[
-  Book(title: "Project Hail Mary", rating: 4.5),
-  Book(title: "Dune", rating: 4.6),
-];
+final purchasedBooks = <Book>[];
 
-final wishlistBooks = <Book>[
-  Book(title: "The Name of the Wind", rating: 4.7),
-  Book(title: "Leviathan Wakes", rating: 4.5),
-];
+final wishlistBooks = <Book>[];
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -120,13 +114,150 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> getUserPurchaseBookList() async {
+    try {
+      final userDocId = 'QIb1kfQm0SCus4BnVzBF'; // Replace with the actual user ID
+      final userDoc = await FirebaseFirestore.instance.collection('User').doc(userDocId).get();
+
+      print("User document fetched");
+
+      if (userDoc.exists) {
+        final List<dynamic> purchasedBooksFromDB = userDoc['purchasedBooks'] ?? [];
+        print("Purchased books from DB: ${purchasedBooksFromDB.length}");
+
+        // If there are no books, just return
+        if (purchasedBooksFromDB.isEmpty) {
+          setState(() {
+            isLoadingPurchasedBooks = false;
+          });
+          return;
+        }
+
+        // Iterate through the purchased books list
+        final List<Book> books = [];
+        for (var bookRef in purchasedBooksFromDB) {
+          if (bookRef is DocumentReference) {
+            final bookSnapshot = await bookRef.get();
+            if (bookSnapshot.exists) {
+              final bookData = bookSnapshot.data() as Map<String, dynamic>;
+              books.add(Book(
+                title: bookData['title'] ?? 'Unknown Title',
+                rating: bookData['rating'] ?? 0,
+                price: bookData['price'],
+                image: bookData['image'] ?? '',
+                description: bookData['description'] ?? '',
+                author: bookData['author'] ?? 'Unknown',
+                reviews: bookData['reviews'] ?? 0,
+                releaseDate: bookData['releaseDate'] ?? 'Unknown',
+                language: bookData['language'] ?? 'English',
+                publisher: bookData['publisher'] ?? 'Unknown',
+                pages: bookData['pages'] ?? 0,
+              ));
+            }
+          }
+        }
+
+        setState(() {
+          purchasedBooks.clear();
+          purchasedBooks.addAll(books);
+          isLoadingPurchasedBooks = false; // Set loading to false after fetching data
+        });
+      } else {
+        print("User document not found!");
+        setState(() {
+          isLoadingPurchasedBooks = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching purchasedBooks: $e');
+      setState(() {
+        isLoadingPurchasedBooks = false;
+      });
+    }
+  }
+
+
+
+
+
+
+
+  Future<void> getUserWishList() async {
+    try {
+      final userDocId = 'QIb1kfQm0SCus4BnVzBF'; // Replace with actual user ID
+      final userDoc = await FirebaseFirestore.instance.collection('User').doc(userDocId).get();
+
+      if (userDoc.exists) {
+        final List<dynamic> wishListBooksFromDB = userDoc['wishListBooks'] ?? [];
+
+        setState(() {
+          wishlistBooks.clear(); // Clear existing list to avoid duplicates
+        });
+
+        for (var bookRef in wishListBooksFromDB) {
+          if (bookRef is DocumentReference) {
+            final bookSnapshot = await bookRef.get();
+            if (bookSnapshot.exists) {
+              final bookData = bookSnapshot.data() as Map<String, dynamic>;
+              wishlistBooks.add(Book(
+                title: bookData['title'] ?? 'Unknown Title',
+                rating: bookData['rating'] ?? 0,
+                price: bookData['price'],
+                image: bookData['image'] ?? '',
+                description: bookData['description'] ?? '',
+                author: bookData['author'] ?? 'Unknown',
+                reviews: bookData['reviews'] ?? 0,
+                releaseDate: bookData['releaseDate'] ?? 'Unknown',
+                language: bookData['language'] ?? 'English',
+                publisher: bookData['publisher'] ?? 'Unknown',
+                pages: bookData['pages'] ?? 0,
+              ));
+            }
+          } else {
+            wishlistBooks.add(Book(
+              title: bookRef.toString(),
+              rating: 0,
+            ));
+          }
+        }
+
+        setState(() {
+          isLoadingWishListBooks = false; // Data is loaded, stop loading
+        });
+      } else {
+        print('User document not found!');
+      }
+    } catch (e) {
+      print('Error fetching wishlistBooks: $e');
+    }
+  }
+
+
+
+  bool isLoadingPurchasedBooks = true;  // Track if purchased books are loading
+  bool isLoadingWishListBooks = true;   // Track if wishlist books are loading
+
   @override
   void initState() {
-    isLoading = true;
     super.initState();
+    // Fetch the data and track the loading states.
     getRecommendedBooks().then((value) {
       setState(() {
         isLoading = false;
+      });
+    });
+
+    // Fetch purchased books
+    getUserPurchaseBookList().then((value) {
+      setState(() {
+        isLoadingPurchasedBooks = false;
+      });
+    });
+
+    // Fetch wishlist books
+    getUserWishList().then((value) {
+      setState(() {
+        isLoadingWishListBooks = false;
       });
     });
 
@@ -142,6 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
