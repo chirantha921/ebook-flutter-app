@@ -21,8 +21,7 @@ String language;
     this.price, // Remove required keyword
     this.author = 'Unknown',
     this.description = 'No description available',
-    this.image =
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGh5WFH8TOIfRKxUrIgJZoDCs1yvQ4hIcppw&s',
+    this.image = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGh5WFH8TOIfRKxUrIgJZoDCs1yvQ4hIcppw&s',
     this.reviews = 0,
     this.releaseDate = 'Unknown',
     this.pages = 0,

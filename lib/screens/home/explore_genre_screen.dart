@@ -12,82 +12,82 @@ class ExploreGenreScreen extends StatelessWidget {
     {
       "name": "Romance",
       "image": "https://example.com/images/romance.jpg",
-      "color": "#FFC0CB", // Pink
+      "color": "#FFC0CB",
     },
     {
       "name": "Thriller",
       "image": "https://example.com/images/thriller.jpg",
-      "color": "#8B0000", // Dark Red
+      "color": "#8B0000",
     },
     {
       "name": "Inspiration",
       "image": "https://example.com/images/inspiration.jpg",
-      "color": "#FFD700", // Gold
+      "color": "#FFD700",
     },
     {
       "name": "Fantasy",
       "image": "https://example.com/images/fantasy.jpg",
-      "color": "#9370DB", // Medium Purple
+      "color": "#9370DB",
     },
     {
       "name": "Sci-Fi",
       "image": "https://example.com/images/scifi.jpg",
-      "color": "#00CED1", // Dark Turquoise
+      "color": "#00CED1",
     },
     {
       "name": "Horror",
       "image": "https://example.com/images/horror.jpg",
-      "color": "#2F4F4F", // Dark Slate Gray
+      "color": "#2F4F4F",
     },
     {
       "name": "Mystery",
       "image": "https://example.com/images/mystery.jpg",
-      "color": "#4B0082", // Indigo
+      "color": "#4B0082",
     },
     {
       "name": "Psychology",
       "image": "https://example.com/images/psychology.jpg",
-      "color": "#4682B4", // Steel Blue
+      "color": "#4682B4",
     },
     {
       "name": "Comedy",
       "image": "https://example.com/images/comedy.jpg",
-      "color": "#FFA500", // Orange
+      "color": "#FFA500",
     },
     {
       "name": "Action",
       "image": "https://example.com/images/action.jpg",
-      "color": "#FF4500", // Orange Red
+      "color": "#FF4500",
     },
     {
       "name": "Adventure",
       "image": "https://example.com/images/adventure.jpg",
-      "color": "#32CD32", // Lime Green
+      "color": "#32CD32",
     },
     {
       "name": "Comics",
       "image": "https://example.com/images/comics.jpg",
-      "color": "#FFDAB9", // Peach Puff
+      "color": "#FFDAB9",
     },
     {
       "name": "Children's",
       "image": "https://example.com/images/children.jpg",
-      "color": "#FF69B4", // Hot Pink
+      "color": "#FF69B4",
     },
     {
       "name": "Art & Photography",
       "image": "https://example.com/images/art_photography.jpg",
-      "color": "#C71585", // Medium Violet Red
+      "color": "#C71585",
     },
     {
       "name": "Food & Drink",
       "image": "https://example.com/images/food_drink.jpg",
-      "color": "#8B4513", // Saddle Brown
+      "color": "#8B4513",
     },
     {
       "name": "Biography",
       "image": "https://example.com/images/biography.jpg",
-      "color": "#708090", // Slate Gray
+      "color": "#708090",
     },
   ];
 
