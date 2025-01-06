@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ebook_app/models/user.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -118,16 +119,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> getUserPurchaseBookList() async {
     try {
-      final userDocId = 'QIb1kfQm0SCus4BnVzBF'; // Replace with the actual user ID
-      final userDoc = await FirebaseFirestore.instance.collection('User').doc(userDocId).get();
+      final userDocId = firebase_auth.FirebaseAuth.instance.currentUser?.uid; // Get the current user's ID
 
+      if (userDocId == null) {
+        print("No user is signed in");
+        setState(() {
+          isLoadingPurchasedBooks = false;
+        });
+        return;
+      }
+
+      final userDoc = await FirebaseFirestore.instance.collection('User').doc(userDocId).get();
       print("User document fetched");
 
       if (userDoc.exists) {
         final List<dynamic> purchasedBooksFromDB = userDoc['purchasedBooks'] ?? [];
         print("Purchased books from DB: ${purchasedBooksFromDB.length}");
 
-        // If there are no books, just return
+        // If there are no books it will stop
         if (purchasedBooksFromDB.isEmpty) {
           setState(() {
             isLoadingPurchasedBooks = false;
@@ -135,14 +144,15 @@ class _HomeScreenState extends State<HomeScreen> {
           return;
         }
 
-        // Iterate through the purchased books list
         final List<Book> books = [];
         for (var bookRef in purchasedBooksFromDB) {
           if (bookRef is DocumentReference) {
             final bookSnapshot = await bookRef.get();
             if (bookSnapshot.exists) {
               final bookData = bookSnapshot.data() as Map<String, dynamic>;
-              books.add(Book(
+
+              //Creating a book object with values fetched from the firebase database
+              final book = Book(
                 title: bookData['title'] ?? 'Unknown Title',
                 rating: bookData['rating'] ?? 0,
                 price: bookData['price'],
@@ -154,7 +164,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 language: bookData['language'] ?? 'English',
                 publisher: bookData['publisher'] ?? 'Unknown',
                 pages: bookData['pages'] ?? 0,
-              ));
+              );
+
+              // Checking whether the books are there for now
+              print('Book Title: ${book.title}');
+              print('Author: ${book.author}');
+              print('Rating: ${book.rating}');
+              print('Price: ${book.price}');
+              print('Description: ${book.description}');
+              print('Release Date: ${book.releaseDate}');
+              print('Language: ${book.language}');
+              print('Publisher: ${book.publisher}');
+              print('Pages: ${book.pages}');
+
+              // Adding the book object created into the book list
+              books.add(book);
             }
           }
         }
@@ -184,24 +208,40 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
 
+
   Future<void> getUserWishList() async {
     try {
-      final userDocId = 'QIb1kfQm0SCus4BnVzBF'; // Replace with actual user ID
+      final userDocId = firebase_auth.FirebaseAuth.instance.currentUser?.uid; // Get the current user's ID
+
+      if (userDocId == null) {
+        print("No user is signed in");
+        setState(() {
+          isLoadingWishListBooks = false;
+        });
+        return;
+      }
+
       final userDoc = await FirebaseFirestore.instance.collection('User').doc(userDocId).get();
+      print("User document fetched for wishlist");
 
       if (userDoc.exists) {
         final List<dynamic> wishListBooksFromDB = userDoc['wishListBooks'] ?? [];
+        print("Wishlist books from DB: ${wishListBooksFromDB.length}");
 
+        // Clearing the whole list to ensure no other user's data and duplicates from being in the list
         setState(() {
-          wishlistBooks.clear(); // Clear existing list to avoid duplicates
+          wishlistBooks.clear();
         });
 
+        // Iterate through the wishlist books list
         for (var bookRef in wishListBooksFromDB) {
           if (bookRef is DocumentReference) {
             final bookSnapshot = await bookRef.get();
             if (bookSnapshot.exists) {
               final bookData = bookSnapshot.data() as Map<String, dynamic>;
-              wishlistBooks.add(Book(
+
+              // Creating the book object based on the data fetched from user's wishlist
+              final book = Book(
                 title: bookData['title'] ?? 'Unknown Title',
                 rating: bookData['rating'] ?? 0,
                 price: bookData['price'],
@@ -213,13 +253,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 language: bookData['language'] ?? 'English',
                 publisher: bookData['publisher'] ?? 'Unknown',
                 pages: bookData['pages'] ?? 0,
-              ));
+              );
+
+              // Checking whether the books are there for now
+              print('Wishlist Book Title: ${book.title}');
+              print('Author: ${book.author}');
+              print('Rating: ${book.rating}');
+              print('Price: ${book.price}');
+              print('Description: ${book.description}');
+              print('Release Date: ${book.releaseDate}');
+              print('Language: ${book.language}');
+              print('Publisher: ${book.publisher}');
+              print('Pages: ${book.pages}');
+              print('---'); // Add separator between books
+
+              // Adding the book object created into the book list
+              wishlistBooks.add(book);
             }
           } else {
-            wishlistBooks.add(Book(
-              title: bookRef.toString(),
-              rating: 0,
-            ));
+            print('Invalid book reference found in wishlist');
           }
         }
 
@@ -228,11 +280,18 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       } else {
         print('User document not found!');
+        setState(() {
+          isLoadingWishListBooks = false;
+        });
       }
     } catch (e) {
       print('Error fetching wishlistBooks: $e');
+      setState(() {
+        isLoadingWishListBooks = false;
+      });
     }
   }
+
 
 
 

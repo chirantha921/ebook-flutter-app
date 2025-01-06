@@ -32,11 +32,14 @@ class AuthService {
         email: email,
         password: password,
       );
-      final userEmail = userCredential.user?.email;
-      if(userEmail != null){
-        await fetchUserInfo(userEmail);
+     final String uid = userCredential.user?.uid??'';
+      if(uid.isNotEmpty){
+        final userDoc = await FirebaseFirestore.instance.collection('User').doc(uid).get();
+        if(userDoc.exists){
+          var userData = userDoc.data();
+        }
       }else{
-        throw AuthException('Failed in fetching user through email.');
+        print('No user with UID: $uid');
       }
       return userCredential;
     } on FirebaseAuthException catch (e) {
@@ -92,21 +95,6 @@ class AuthService {
     });
   }
 
-  Future<Map<String, dynamic>?> fetchUserInfo(String email) async{
-    try{
-      final querySnapshot = await _firestore.collection('User').where('email', isEqualTo: email).limit(1).get();
-      if(querySnapshot.docs.isNotEmpty){
-        final userDoc = querySnapshot.docs.first;
-        return userDoc.data();
-      }else{
-        print('No user found with this email.');
-        return null;
-      }
-    }catch(e){
-      print('Error in fetching user by email: $e');
-      return null;
-    }
-  }
 
   // Update user profile
   Future<void> updateProfile(String displayName, {String? photoUrl}) async {

@@ -1,3 +1,4 @@
+import 'package:ebook_app/screens/auth/signin_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,6 +6,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'firebase_options.dart';
 import 'services/auth_service.dart';
+import 'package:provider/provider.dart';
+import 'providers/user_Provider.dart';
 import 'services/firebase_service.dart';
 import 'utils/constants.dart';
 import 'utils/routes.dart';
@@ -64,14 +67,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return ChangeNotifierProvider(
+      create: (context) => UserProvider(),
+      child: MaterialApp(
       title: 'eBook App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const HomeScreen(),
+      home: const SignInScreen(),
+      ),
     );
   }
 }
