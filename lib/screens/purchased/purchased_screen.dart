@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../utils/constants.dart';
 import '../../models/book.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 class PurchasedScreen extends StatefulWidget {
   const PurchasedScreen({Key? key}) : super(key: key);
@@ -46,6 +48,103 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
       "currentChapter": "Chapter 4 of 32",
     },
   ];
+
+  /* Future<void> getUserPurchaseBookList() async {
+    try {
+      final userDocId = firebase_auth.FirebaseAuth.instance.currentUser?.uid; // Get the current user's ID
+
+      if (userDocId == null) {
+        print("No user is signed in");
+        setState(() {
+          isLoadingPurchasedBooks = false;
+        });
+        return;
+      }
+
+      final userDoc = await FirebaseFirestore.instance.collection('User').doc(userDocId).get();
+      print("User document fetched");
+
+      if (userDoc.exists) {
+        final List<dynamic> purchasedBooksFromDB = userDoc['purchasedBooks'] ?? [];
+        print("Purchased books from DB: ${purchasedBooksFromDB.length}");
+
+        // If there are no books it will stop
+        if (purchasedBooksFromDB.isEmpty) {
+          setState(() {
+            isLoadingPurchasedBooks = false;
+          });
+          return;
+        }
+
+        final List<Book> books = [];
+        for (var bookRef in purchasedBooksFromDB) {
+          if (bookRef is DocumentReference) {
+            final bookSnapshot = await bookRef.get();
+            if (bookSnapshot.exists) {
+              final bookData = bookSnapshot.data() as Map<String, dynamic>;
+
+              //Creating a book object with values fetched from the firebase database
+              final book = Book(
+                title: bookData['title'] ?? 'Unknown Title',
+                rating: bookData['rating'] ?? 0,
+                price: bookData['price'],
+                image: bookData['image'] ?? '',
+                description: bookData['description'] ?? '',
+                author: bookData['author'] ?? 'Unknown',
+                reviews: bookData['reviews'] ?? 0,
+                releaseDate: bookData['releaseDate'] ?? 'Unknown',
+                language: bookData['language'] ?? 'English',
+                publisher: bookData['publisher'] ?? 'Unknown',
+                pages: bookData['pages'] ?? 0,
+              );
+
+              // Checking whether the books are there for now
+              print('Book Title: ${book.title}');
+              print('Author: ${book.author}');
+              print('Rating: ${book.rating}');
+              print('Price: ${book.price}');
+              print('Description: ${book.description}');
+              print('Release Date: ${book.releaseDate}');
+              print('Language: ${book.language}');
+              print('Publisher: ${book.publisher}');
+              print('Pages: ${book.pages}');
+
+              // Adding the book object created into the book list
+              books.add(book);
+            }
+          }
+        }
+
+        setState(() {
+          purchasedBooks.clear();
+          purchasedBooks.addAll(books as Iterable<Map<String, dynamic>>);
+          isLoadingPurchasedBooks = false; // Set loading to false after fetching data
+        });
+      } else {
+        print("User document not found!");
+        setState(() {
+          isLoadingPurchasedBooks = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching purchasedBooks: $e');
+      setState(() {
+        isLoadingPurchasedBooks = false;
+      });
+    }
+  }
+
+  bool isLoadingPurchasedBooks = true;
+  @override
+  void initState() {
+    super.initState();
+    // Fetch purchased books
+    getUserPurchaseBookList().then((value) {
+      setState(() {
+        isLoadingPurchasedBooks = false;
+      });
+    });
+  }*/
 
   @override
   Widget build(BuildContext context) {

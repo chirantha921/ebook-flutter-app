@@ -133,9 +133,10 @@ class _HomeScreenState extends State<HomeScreen> {
       print("User document fetched");
 
       if (userDoc.exists) {
+        print("User document fetched successfully: ${userDoc.data()}");
         final List<dynamic> purchasedBooksFromDB = userDoc['purchasedBooks'] ?? [];
         print("Purchased books from DB: ${purchasedBooksFromDB.length}");
-
+        print("Purchased books references: $purchasedBooksFromDB");
         // If there are no books it will stop
         if (purchasedBooksFromDB.isEmpty) {
           setState(() {
@@ -295,32 +296,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
 
-  bool isLoadingPurchasedBooks = true;  // Track if purchased books are loading
-  bool isLoadingWishListBooks = true;   // Track if wishlist books are loading
+  bool isLoadingPurchasedBooks = true;
+  bool isLoadingWishListBooks = true;
 
   @override
   void initState() {
     super.initState();
-    // Fetch the data and track the loading states.
-    getRecommendedBooks().then((value) {
-      setState(() {
-        isLoading = false;
-      });
+    print("Initializing state...");
+    Future.wait([
+      // Fetch the data and track the loading states.
+      getRecommendedBooks(),
+      // Fetch purchased books
+      getUserPurchaseBookList(),
+      // Fetch wishlist books
+      getUserWishList(),
+    ]).then((values){
+      isLoading = false;
+      isLoadingPurchasedBooks = false;
+      isLoadingWishListBooks = false;
     });
 
-    // Fetch purchased books
-    getUserPurchaseBookList().then((value) {
-      setState(() {
-        isLoadingPurchasedBooks = false;
-      });
-    });
-
-    // Fetch wishlist books
-    getUserWishList().then((value) {
-      setState(() {
-        isLoadingWishListBooks = false;
-      });
-    });
 
     // Set up transparent navigation bar
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -354,13 +349,13 @@ class _HomeScreenState extends State<HomeScreen> {
         key: _scaffoldKey,
         backgroundColor: Colors.white,
         extendBody: true,
-        // Important for transparent navigation bar
         body: Row(
           children: [
             if (isDesktopView) _buildDesktopSidebar(),
             Expanded(
-              // Show the selected page using IndexedStack
-              child: IndexedStack(
+              child: isLoadingPurchasedBooks || isLoadingWishListBooks
+                  ? Center(child: CircularProgressIndicator())
+                  : IndexedStack(
                 index: _selectedIndex,
                 children: _pages,
               ),
@@ -370,9 +365,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         bottomNavigationBar: !isDesktopView
             ? CustomBottomNavigationBar(
-                selectedIndex: _selectedIndex,
-                onTap: _onBottomNavTapped,
-              )
+          selectedIndex: _selectedIndex,
+          onTap: _onBottomNavTapped,
+        )
             : null,
       ),
     );
@@ -661,6 +656,8 @@ class _HomeContentState extends State<HomeContent> {
 
   @override
   Widget build(BuildContext context) {
+    print("Building widget with purchasedBooks length: ${purchasedBooks.length}");
+    print("Building widget with wishlistBooks length: ${wishlistBooks.length}");
     final isDesktopView = isDesktop(context);
 
     return NotificationListener<ScrollNotification>(
