@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ebook_app/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -53,6 +54,7 @@ class HomeScreen extends StatefulWidget {
 
 // Main HomeScreen state that manages bottom navigation and desktop layout
 class _HomeScreenState extends State<HomeScreen> {
+  late User user;
   int _selectedIndex = 0;
   bool isLoading = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();

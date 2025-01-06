@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   User? get currentUser => _auth.currentUser;
   bool get isAuthenticated => currentUser != null;
@@ -15,6 +17,8 @@ class AuthService {
         email: email,
         password: password,
       );
+
+      await createDoc(userCredential.user!);
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw AuthException(_getReadableErrorMessage(e.code));
@@ -28,6 +32,12 @@ class AuthService {
         email: email,
         password: password,
       );
+      final userEmail = userCredential.user?.email;
+      if(userEmail != null){
+        await fetchUserInfo(userEmail);
+      }else{
+        throw AuthException('Failed in fetching user through email.');
+      }
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw AuthException(_getReadableErrorMessage(e.code));
@@ -71,6 +81,33 @@ class AuthService {
     }
   }
 
+  Future<void> createDoc(User user)async{
+    final userDoc = _firestore.collection('User').doc(user.uid);
+
+    await userDoc.set({
+      'email': user.email,
+      'purchasedBooks': [],
+      'wishListBooks' : [],
+      'role': "User",
+    });
+  }
+
+  Future<Map<String, dynamic>?> fetchUserInfo(String email) async{
+    try{
+      final querySnapshot = await _firestore.collection('User').where('email', isEqualTo: email).limit(1).get();
+      if(querySnapshot.docs.isNotEmpty){
+        final userDoc = querySnapshot.docs.first;
+        return userDoc.data();
+      }else{
+        print('No user found with this email.');
+        return null;
+      }
+    }catch(e){
+      print('Error in fetching user by email: $e');
+      return null;
+    }
+  }
+
   // Update user profile
   Future<void> updateProfile(String displayName, {String? photoUrl}) async {
     try {
@@ -110,6 +147,4 @@ class AuthException implements Exception {
   final String message;
   AuthException(this.message);
 
-  @override
-  String toString() => 'AuthException: $message';
 }
