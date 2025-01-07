@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../../utils/constants.dart'; // Update import path as needed
+import 'package:ebook_app/models/book.dart';
 
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({Key? key}) : super(key: key);
@@ -12,38 +14,98 @@ class WishlistScreen extends StatefulWidget {
 
 class _WishlistScreenState extends State<WishlistScreen> {
   // Sample wishlist data
-  List<Map<String, dynamic>> wishlistBooks = [
-    {
-      "title": "Harry Potter and the Deathly Hallows",
-      "imageUrl": "https://example.com/hp_deathly_hallows.jpg",
-      "rating": 4.9,
-      "price": 9.99,
-    },
-    {
-      "title": "The Lost Metal: A Mistborn Novel by Brandon Sanderson",
-      "imageUrl": "https://example.com/the_lost_metal.jpg",
-      "rating": 4.8,
-      "price": 4.99,
-    },
-    {
-      "title": "The Most Powerful Quotes: 400 Motivational Quotes and Sayings",
-      "imageUrl": "https://example.com/most_powerful_quotes.jpg",
-      "rating": 4.9,
-      "price": 2.50,
-    },
-    {
-      "title": "Free Life Fantasy Online: Immortal Princess (Light Novel) Vol. 2",
-      "imageUrl": "https://example.com/free_life_fantasy.jpg",
-      "rating": 4.7,
-      "price": 4.99,
-    },
-    {
-      "title": "Harry Potter and the Prisoner of Azkaban",
-      "imageUrl": "https://example.com/hp_prisoner_azkaban.jpg",
-      "rating": 4.7,
-      "price": 7.99,
-    },
-  ];
+  List<Book> wishlistBooks = [];
+
+  Future<void> getUserWishList() async {
+    try {
+      final userDocId = firebase_auth.FirebaseAuth.instance.currentUser?.uid; // Get the current user's ID
+
+      if (userDocId == null) {
+        print("No user is signed in");
+        setState(() {
+          isLoadingWishListBooks = false;
+        });
+        return;
+      }
+
+      final userDoc = await FirebaseFirestore.instance.collection('User').doc(userDocId).get();
+      print("User document fetched for wishlist");
+
+      if (userDoc.exists) {
+        final List<dynamic> wishListBooksFromDB = userDoc['wishListBooks'] ?? [];
+        print("Wishlist books from DB: ${wishListBooksFromDB.length}");
+
+        // Clearing the whole list to ensure no other user's data and duplicates from being in the list
+        setState(() {
+          wishlistBooks.clear();
+        });
+
+        // Iterate through the wishlist books list
+        for (var bookRef in wishListBooksFromDB) {
+          if (bookRef is DocumentReference) {
+            final bookSnapshot = await bookRef.get();
+            if (bookSnapshot.exists) {
+              final bookData = bookSnapshot.data() as Map<String, dynamic>;
+
+              // Creating the book object based on the data fetched from user's wishlist
+              final book = Book(
+                title: bookData['title'] ?? 'Unknown Title',
+                rating: bookData['rating'] ?? 0,
+                price: bookData['price'],
+                image: bookData['image'] ?? '',
+                description: bookData['description'] ?? '',
+                author: bookData['author'] ?? 'Unknown',
+                reviews: bookData['reviews'] ?? 0,
+                releaseDate: bookData['releaseDate'] ?? 'Unknown',
+                language: bookData['language'] ?? 'English',
+                publisher: bookData['publisher'] ?? 'Unknown',
+                pages: bookData['pages'] ?? 0,
+              );
+
+              // Checking whether the books are there for now
+              print('Wishlist Book Title: ${book.title}');
+              print('Author: ${book.author}');
+              print('Rating: ${book.rating}');
+              print('Price: ${book.price}');
+              print('Description: ${book.description}');
+              print('Release Date: ${book.releaseDate}');
+              print('Language: ${book.language}');
+              print('Publisher: ${book.publisher}');
+              print('Pages: ${book.pages}');
+              print('---'); // Add separator between books
+
+              // Adding the book object created into the book list
+              wishlistBooks.add(book);
+            }
+          } else {
+            print('Invalid book reference found in wishlist');
+          }
+        }
+
+        setState(() {
+          isLoadingWishListBooks = false; // Data is loaded, stop loading
+        });
+      } else {
+        print('User document not found!');
+        setState(() {
+          isLoadingWishListBooks = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching wishlistBooks: $e');
+      setState(() {
+        isLoadingWishListBooks = false;
+      });
+    }
+  }
+
+  bool isLoadingWishListBooks = true;
+  @override
+  void initState() {
+    super.initState();
+    // Fetch the wishlist data from Firestore
+    getUserWishList();
+  }
 
   void _showBookMenu(int index) async {
     final selectedAction = await showModalBottomSheet<String>(
@@ -183,7 +245,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.network(
-                    book["imageUrl"],
+                    book.image,
                     width: isDesktop ? 120 : 80,
                     height: isDesktop ? 180 : 120,
                     fit: BoxFit.cover,
@@ -201,7 +263,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     children: [
                       // Book title
                       Text(
-                        book["title"],
+                        book.title,
                         style: GoogleFonts.urbanist(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -218,7 +280,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                           const Icon(Icons.star, size: 14, color: Colors.amber),
                           const SizedBox(width: 4),
                           Text(
-                            book["rating"].toStringAsFixed(1),
+                            book.rating.toStringAsFixed(1),
                             style: GoogleFonts.urbanist(fontSize: 14, color: Colors.black87),
                           ),
                         ],
@@ -226,7 +288,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       const SizedBox(height: 4),
                       // Price
                       Text(
-                        "\$${book["price"].toStringAsFixed(2)}",
+                        "\$${book.price?.toStringAsFixed(2)}",
                         style: GoogleFonts.urbanist(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,

@@ -1,4 +1,5 @@
 // lib/models/book.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class Book {
@@ -13,6 +14,9 @@ class Book {
   String author = 'Unknown';
   String description = 'No description available';
   String image = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGh5WFH8TOIfRKxUrIgJZoDCs1yvQ4hIcppw&s';
+  double progress;
+  String currentChapter;
+  String lastRead;
 
   @override
   String toString() {
@@ -31,19 +35,25 @@ class Book {
     this.pages = 0,
     this.language = 'English',
     this.publisher = 'Unknown',
-
+    this.progress = 0,
+    this.currentChapter = "None",
+    this.lastRead = "Now",
   });
+
   factory Book.fromMap(Map<String, dynamic> data) {
     return Book(
-      title: data['title'],
+      title: data['title'] as String,
       rating: data['rating']?.toDouble() ?? 0.0,
       price: data['price']?.toDouble(),
-      author: data['author'],
-      image: data['image'],
-      pages: data['pages'],
-      description: data['description'],
-      language: data['language'],
-      publisher: data['publisher'],
+      author: data['author']  as String,
+      image: data['image'] as String,
+      pages: data['pages'] as int,
+      description: data['description'] as String,
+      language: data['language'] as String,
+      publisher: data['publisher'] as String,
+      progress: data['progress'] as double,
+      currentChapter: data['currentChapter'] as String,
+      lastRead: data['lastRead'] as String,
     );
   }
 
@@ -58,11 +68,50 @@ class Book {
       'language':language,
       'publisher':publisher,
       'pages':pages,
+      'progress':progress,
+      'currentChapter':currentChapter,
+      'lastRead':lastRead,
     };
   }
   String get formattedPrice => price?.toStringAsFixed(2) ?? '';
 
   // get publisher => null;
+  // From JSON constructor
+  factory Book.fromJson(Map<String, dynamic> json) {
+    return Book(
+      image: json['image'] ?? '', // Default to an empty string if null
+      pages: json['pages'] ?? 0, // Default to 0 if null
+      releaseDate: json['releaseDate'] ?? '', // Default to an empty string if null
+      price: (json['price'] != null) ? json['price'].toDouble() : 0.0, // Convert to double or use 0.0 if null
+      author: json['author'] ?? '', // Default to an empty string if null
+      rating: (json['rating'] != null) ? json['rating'].toDouble() : 0.0, // Convert to double or use 0.0 if null
+      publisher: json['publisher'] ?? '', // Default to an empty string if null
+      description: json['description'] ?? '', // Default to an empty string if null
+      language: json['language'] ?? '', // Default to an empty string if null
+      title: json['title'] ?? '', // Default to an empty string if null
+      progress: json['progress'] ?? 0, // Default to 0 if null
+      currentChapter: json['currentChapter'] ?? '', // Default to an empty string if null
+      lastRead: json['lastRead'] ?? '',
+    );
+  }
+
+  // To JSON method (optional, if you need to send data back)
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'rating': rating,
+      'price': price,
+      'image': image,
+      'description': description,
+      'author':author,
+      'language':language,
+      'publisher':publisher,
+      'pages':pages,
+      'progress':progress,
+      'currentChapter':currentChapter,
+      'lastRead':lastRead,
+    };
+  }
 }
 
 class Genre {

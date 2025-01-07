@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../utils/constants.dart';
-import '../../models/book.dart';
+import 'package:ebook_app/models/book.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
@@ -16,40 +16,9 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
   bool isGridView = true;
 
   // Sample purchased books data with reading progress
-  final List<Map<String, dynamic>> purchasedBooks = [
-    {
-      "book": Book(
-        title: "Batman: Arkham Unhinged Vol. 1",
-        rating: 4.3,
-        price: 0,
-      ),
-      "progress": 0.75,
-      "lastRead": "2 hours ago",
-      "currentChapter": "Chapter 15 of 20",
-    },
-    {
-      "book": Book(
-        title: "His Dark Materials: The Golden Compass",
-        rating: 4.4,
-        price: 0,
-      ),
-      "progress": 0.45,
-      "lastRead": "Yesterday",
-      "currentChapter": "Chapter 8 of 24",
-    },
-    {
-      "book": Book(
-        title: "Project Hail Mary",
-        rating: 4.8,
-        price: 0,
-      ),
-      "progress": 0.2,
-      "lastRead": "3 days ago",
-      "currentChapter": "Chapter 4 of 32",
-    },
-  ];
+  late List<Book> purchasedBooks = [];
 
-  /* Future<void> getUserPurchaseBookList() async {
+  Future<void> getUserPurchaseBookList() async {
     try {
       final userDocId = firebase_auth.FirebaseAuth.instance.currentUser?.uid; // Get the current user's ID
 
@@ -65,9 +34,10 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
       print("User document fetched");
 
       if (userDoc.exists) {
+        print("User document fetched successfully: ${userDoc.data()}");
         final List<dynamic> purchasedBooksFromDB = userDoc['purchasedBooks'] ?? [];
         print("Purchased books from DB: ${purchasedBooksFromDB.length}");
-
+        print("Purchased books references: $purchasedBooksFromDB");
         // If there are no books it will stop
         if (purchasedBooksFromDB.isEmpty) {
           setState(() {
@@ -117,7 +87,7 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
 
         setState(() {
           purchasedBooks.clear();
-          purchasedBooks.addAll(books as Iterable<Map<String, dynamic>>);
+          purchasedBooks.addAll(books);
           isLoadingPurchasedBooks = false; // Set loading to false after fetching data
         });
       } else {
@@ -134,6 +104,11 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
     }
   }
 
+
+
+
+
+
   bool isLoadingPurchasedBooks = true;
   @override
   void initState() {
@@ -144,7 +119,7 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
         isLoadingPurchasedBooks = false;
       });
     });
-  }*/
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +162,9 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
           const SizedBox(width: 16),
         ],
       ),
-      body: Column(
+      body: isLoadingPurchasedBooks
+        ? Center(child: CircularProgressIndicator())
+       : Column(
         children: [
           Padding(
             padding: EdgeInsets.symmetric(
@@ -338,16 +315,14 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
       itemCount: purchasedBooks.length,
       itemBuilder: (context, index) {
         final bookData = purchasedBooks[index];
-        return _buildGridItem(bookData);
+        return _buildGridItem(bookData as Map<String, dynamic>);
       },
     );
   }
 
   Widget _buildGridItem(Map<String, dynamic> bookData) {
     final book = bookData['book'] as Book;
-    final progress = bookData['progress'] as double;
-    final currentChapter = bookData['currentChapter'] as String;
-
+    print('Book Data: $book');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -380,7 +355,7 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
                   ),
                   child: FractionallySizedBox(
                     alignment: Alignment.centerLeft,
-                    widthFactor: progress,
+                    widthFactor: book.progress,
                     child: Container(
                       decoration: BoxDecoration(
                         color: AppColors.primary,
@@ -408,7 +383,7 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
         const SizedBox(height: 4),
         // Progress text
         Text(
-          currentChapter,
+          book.currentChapter,
           style: GoogleFonts.urbanist(
             fontSize: 12,
             color: Colors.black54,
@@ -449,7 +424,7 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         final bookData = purchasedBooks[index];
-        return _buildListItem(bookData, isDesktop);
+        return _buildListItem(bookData as Map<String, dynamic>, isDesktop);
       },
     );
   }
