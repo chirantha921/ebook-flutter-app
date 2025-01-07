@@ -104,11 +104,6 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
     }
   }
 
-
-
-
-
-
   bool isLoadingPurchasedBooks = true;
   @override
   void initState() {
@@ -315,13 +310,13 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
       itemCount: purchasedBooks.length,
       itemBuilder: (context, index) {
         final bookData = purchasedBooks[index];
-        return _buildGridItem(bookData as Map<String, dynamic>);
+        return _buildGridItem(bookData! as Book);
       },
     );
   }
 
-  Widget _buildGridItem(Map<String, dynamic> bookData) {
-    final book = bookData['book'] as Book;
+  Widget _buildGridItem( Book bookData) {
+    final book = bookData;
     print('Book Data: $book');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -424,16 +419,16 @@ class _PurchasedScreenState extends State<PurchasedScreen> {
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         final bookData = purchasedBooks[index];
-        return _buildListItem(bookData as Map<String, dynamic>, isDesktop);
+        return _buildListItem(bookData! as Book, isDesktop);
       },
     );
   }
 
-  Widget _buildListItem(Map<String, dynamic> bookData, bool isDesktop) {
-    final book = bookData['book'] as Book;
-    final progress = bookData['progress'] as double;
-    final lastRead = bookData['lastRead'] as String;
-    final currentChapter = bookData['currentChapter'] as String;
+  Widget _buildListItem(Book bookData, bool isDesktop) {
+    final book = bookData;
+    final progress = bookData.progress;
+    final lastRead = bookData.lastRead;
+    final currentChapter = bookData.currentChapter;
 
     return Container(
       height: isDesktop ? 160 : 140,
