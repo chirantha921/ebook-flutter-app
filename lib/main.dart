@@ -1,3 +1,4 @@
+import 'package:ebook_app/screens/adminScreen/addBook.dart';
 import 'package:ebook_app/screens/auth/signin_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -76,7 +77,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const SignInScreen(),
+      home: const AddBook(),
       ),
     );
   }

@@ -402,7 +402,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildDesktopNavItem(Icons.explore_outlined, "Explore", 1),
           // Remove onTap parameter
           _buildDesktopNavItem(Icons.bookmark_border_rounded, "Bookmarks", 2),
-          _buildDesktopNavItem(Icons.person_outline_rounded, "Profile", 4),
+          _buildDesktopNavItem(Icons.person_outline_rounded, "Profile", 3),
           const Spacer(),
           Padding(
             padding: const EdgeInsets.all(24.0),

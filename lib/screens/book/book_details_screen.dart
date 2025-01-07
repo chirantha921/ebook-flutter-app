@@ -410,17 +410,17 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
           child: ElevatedButton(
             onPressed: () {
              Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => ReaderScreen(
-      pdfPath: 'assets/books/atomic_habits.pdf', // Local path or URL
-      bookTitle: 'Book Title',
-      authorName: 'F. Scott Fitzgerald',
-      coverImageUrl: 'https://example.com/book_cover.jpg', // Optional
+               context,
+               MaterialPageRoute(
+                 builder: (context) => ReaderScreen(
+                   pdfPath: 'assets/books/atomic_habits.pdf', // Local path or URL
+                   bookTitle: 'Book Title',
+                   authorName: 'F. Scott Fitzgerald',
+                   coverImageUrl: 'https://example.com/book_cover.jpg', // Optional
 
-    ),
-  ),
-);
+                 ),
+               ),
+             );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,

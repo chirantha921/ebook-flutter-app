@@ -39,8 +39,9 @@ class CustomBottomNavigationBar extends StatelessWidget {
         children: [
           _buildNavItem(0, Icons.home_rounded, 'Home'),
           _buildNavItem(1, Icons.explore_outlined, 'Explore'),
-          _buildNavItem(2, Icons.bookmark_border_rounded, 'Bookmarks'),
-          _buildNavItem(3, Icons.person_outline_rounded, 'Profile'),
+          _buildNavItem(2, Icons.bookmark_border_rounded, 'WishList'),
+          _buildNavItem(3, Icons.book, 'My Books'),
+          _buildNavItem(4, Icons.perm_identity, 'Account')
         ],
       ),
     );

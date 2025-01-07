@@ -79,23 +79,23 @@ class Book {
   // From JSON constructor
   factory Book.fromJson(Map<String, dynamic> json) {
     return Book(
-      image: json['image'] ?? '', // Default to an empty string if null
-      pages: json['pages'] ?? 0, // Default to 0 if null
-      releaseDate: json['releaseDate'] ?? '', // Default to an empty string if null
-      price: (json['price'] != null) ? json['price'].toDouble() : 0.0, // Convert to double or use 0.0 if null
-      author: json['author'] ?? '', // Default to an empty string if null
-      rating: (json['rating'] != null) ? json['rating'].toDouble() : 0.0, // Convert to double or use 0.0 if null
-      publisher: json['publisher'] ?? '', // Default to an empty string if null
-      description: json['description'] ?? '', // Default to an empty string if null
-      language: json['language'] ?? '', // Default to an empty string if null
-      title: json['title'] ?? '', // Default to an empty string if null
-      progress: json['progress'] ?? 0, // Default to 0 if null
-      currentChapter: json['currentChapter'] ?? '', // Default to an empty string if null
+      image: json['image'] ?? '',
+      pages: json['pages'] ?? 0,
+      releaseDate: json['releaseDate'] ?? '',
+      price: (json['price'] != null) ? json['price'].toDouble() : 0.0,
+      author: json['author'] ?? '',
+      rating: (json['rating'] != null) ? json['rating'].toDouble() : 0.0,
+      publisher: json['publisher'] ?? '',
+      description: json['description'] ?? '',
+      language: json['language'] ?? '',
+      title: json['title'] ?? '',
+      progress: json['progress'] ?? 0,
+      currentChapter: json['currentChapter'] ?? '',
       lastRead: json['lastRead'] ?? '',
     );
   }
 
-  // To JSON method (optional, if you need to send data back)
+  
   Map<String, dynamic> toJson() {
     return {
       'title': title,
