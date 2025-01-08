@@ -18,6 +18,7 @@ class Book {
   double progress;
   String currentChapter;
   String lastRead;
+  String genre;
 
   @override
   String toString() {
@@ -28,6 +29,7 @@ class Book {
     required this.title,
     required this.rating,
     this.bookId = '',
+    this.genre = '',
     this.price, // Remove required keyword
     this.author = 'Unknown',
     this.description = 'No description available',
@@ -70,6 +72,7 @@ class Book {
       image: data['image'] ?? '',
       pages: data['pages'] ?? '',
       description: data['description'] ?? '',
+      genre: data['genre'] ?? '',
       language: data['language'] ?? '',
       publisher: data['publisher'] ?? '',
       progress: data['progress']?.toDouble() ?? 0.0,
@@ -91,6 +94,7 @@ class Book {
       'progress':progress,
       'currentChapter':currentChapter,
       'lastRead':lastRead,
+      'genre': genre,
     };
   }
   String get formattedPrice => price?.toStringAsFixed(2) ?? '';

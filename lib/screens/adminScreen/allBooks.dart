@@ -50,49 +50,49 @@ class _AllBookScreenState extends State<AllBooksScreen> {
 
   void _showBookMenu(int index) async {
     final selectedAction = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildBottomSheetAction(
-                  icon: Icons.delete_outline,
-                  label: 'Remove from Book list',
-                  onTap: () {
-                    Navigator.pop(context, 'remove');
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildBottomSheetAction(
-                  icon: Icons.share_outlined,
-                  label: 'Share',
-                  onTap: () {
-                    Navigator.pop(context, 'share');
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildBottomSheetAction(
-                  icon: Icons.info_outline_rounded,
-                  label: 'About Ebook',
-                  onTap: () {
-                    Navigator.pop(context, 'about');
-                  },
-                ),
-              ],
+        context: context,
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (context) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildBottomSheetAction(
+                    icon: Icons.delete_outline,
+                    label: 'Remove from Book list',
+                    onTap: () {
+                      Navigator.pop(context, 'remove');
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _buildBottomSheetAction(
+                    icon: Icons.share_outlined,
+                    label: 'Share',
+                    onTap: () {
+                      Navigator.pop(context, 'share');
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _buildBottomSheetAction(
+                    icon: Icons.info_outline_rounded,
+                    label: 'About Ebook',
+                    onTap: () {
+                      Navigator.pop(context, 'about');
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
     );
-
-    if (selectedAction == 'remove') {
+    if (selectedAction == 'remove')
+    {
       setState(() {
         deleteBook(allBooks[index].bookId);
         allBooks.removeAt(index);
@@ -101,7 +101,45 @@ class _AllBookScreenState extends State<AllBooksScreen> {
       // Implement share logic
     } else if (selectedAction == 'about') {
       // Implement about logic
+      _showAboutBook(allBooks[index].description);
     }
+  }
+
+    void _showAboutBook(String description) async {
+      final selectedAction = await showModalBottomSheet<String>(
+        context: context,
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (context) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildSectionTitle("About the Book"),
+                  TextFormField(
+                    initialValue: description,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: GoogleFonts.urbanist(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Colors.black87,
+      ),
+    );
   }
 
   Widget _buildBottomSheetAction({

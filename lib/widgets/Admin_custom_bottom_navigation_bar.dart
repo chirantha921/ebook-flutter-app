@@ -48,7 +48,6 @@ class AdminCustomBottomNavigationBar extends StatelessWidget {
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = selectedIndex == index;
-
     return GestureDetector(
       onTap: () => onTap(index),
       behavior: HitTestBehavior.opaque,

@@ -1,3 +1,4 @@
+import 'package:ebook_app/screens/home/genreBookSearch.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../utils/constants.dart';
@@ -149,10 +150,20 @@ class ExploreGenreScreen extends StatelessWidget {
           ),
           itemBuilder: (context, index) {
             final genre = genres[index];
-            return _buildGenreCard(
-              name: genre["name"]!,
-              imageUrl: genre["image"]!,
-              color: genre["color"],
+            return GestureDetector(
+              onTap: (){
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => BookByGenreScreen(genre: genre["name"]!),
+                    ),
+                );
+              },
+              child: _buildGenreCard(
+                name: genre["name"]!,
+                imageUrl: genre["image"]!,
+                color: genre["color"],
+              ),
             );
           },
         ),

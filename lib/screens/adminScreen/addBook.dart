@@ -24,6 +24,7 @@ class _AddBookState extends State<AddBook>{
   final TextEditingController releaseDateEditingController = TextEditingController();
   final TextEditingController priceEditingController = TextEditingController();
   final TextEditingController languageEditingController = TextEditingController();
+  final TextEditingController genreEditingController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -109,6 +110,17 @@ class _AddBookState extends State<AddBook>{
           ),
         ),
         const SizedBox(height: 20.0),
+          _buildSectionTitle('Publisher of the Book'),
+          TextFormField(
+            controller: publisherEditingController,
+            keyboardType: TextInputType.phone,
+            maxLines: null,
+            decoration: _buildInputDecoration(
+              'Enter the publisher of the book',
+              Icons.perm_identity,
+            ),
+          ),
+          const SizedBox(height: 20.0),
         _buildSectionTitle('Image of the book (Link)'),
         TextFormField(
           controller: imageEditingController,
@@ -120,6 +132,17 @@ class _AddBookState extends State<AddBook>{
           ),
         ),
         const SizedBox(height: 20.0),
+          _buildSectionTitle('Genre of the Book'),
+          TextFormField(
+            controller: genreEditingController,
+            keyboardType: TextInputType.phone,
+            maxLines: null,
+            decoration: _buildInputDecoration(
+              'Enter the Genre of the book',
+              Icons.library_books,
+            ),
+          ),
+          const SizedBox(height: 20.0),
         _buildSectionTitle('Price of the Book'),
         TextFormField(
           controller: priceEditingController,
@@ -128,17 +151,6 @@ class _AddBookState extends State<AddBook>{
           decoration: _buildInputDecoration(
             'Enter your display name',
             Icons.monetization_on,
-          ),
-        ),
-        const SizedBox(height: 20.0),
-        _buildSectionTitle('Publisher of the Book'),
-        TextFormField(
-          controller: publisherEditingController,
-          keyboardType: TextInputType.phone,
-          maxLines: null,
-          decoration: _buildInputDecoration(
-            'Enter the publisher of the book',
-            Icons.perm_identity,
           ),
         ),
         const SizedBox(height: 20.0),
@@ -199,8 +211,21 @@ class _AddBookState extends State<AddBook>{
       progress: 0,
       currentChapter: "1",
       lastRead: "none",
+      genre: genreEditingController.text,
     );
     await addNewBook(book);
+    setState(() {
+      titleEditingController.clear();
+      priceEditingController.clear();
+      authorEditingController.clear();
+      imageEditingController.clear();
+      pageEditingController.clear();
+      descriptionEditingController.clear();
+      languageEditingController.clear();
+      publisherEditingController.clear();
+      genreEditingController.clear();
+      _isLoading = false;
+    });
   }
 
   Future<void> addNewBook(Book book) async{
@@ -211,6 +236,7 @@ class _AddBookState extends State<AddBook>{
     }).catchError((error){
       print("Error in adding book: $error");
     });
+
   }
 
   Widget _buildSectionTitle(String title) {
