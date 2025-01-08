@@ -1,4 +1,6 @@
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ebook_app/screens/adminScreen/adminHomeScreen.dart';
 import 'package:ebook_app/screens/onboarding/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -49,7 +51,15 @@ class _SignInScreenState extends State<SignInScreen> {
 
       if (!mounted) return;
 
-      _showSignInSuccessDialog();
+      final userDoc = await FirebaseFirestore.instance.collection('User').doc(userCredential.user!.uid).get();
+
+      if(!userDoc.exists || !userDoc.data()!.containsKey('role')){
+        throw Exception("User role not found please check the user credentials");
+      }
+
+      final String role = userDoc.data()!['role'];
+      _showSignInSuccessDialog(role);
+
     } catch (e) {
       if (!mounted) return;
       _showErrorDialog(_getErrorMessage(e));
@@ -78,7 +88,7 @@ class _SignInScreenState extends State<SignInScreen> {
     return 'An error occurred during sign in. Please try again.';
   }
 
-  void _showSignInSuccessDialog() {
+  void _showSignInSuccessDialog(String role) {
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.4),
@@ -166,13 +176,19 @@ class _SignInScreenState extends State<SignInScreen> {
         );
       },
     );
-
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
+        if(role == 'Admin'){
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
+          );
+        }else if(role == 'User'){
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        }
       }
     });
   }
