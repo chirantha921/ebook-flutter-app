@@ -57,6 +57,23 @@ class Book {
     );
   }
 
+  factory Book.fromFireStore(DocumentSnapshot doc){
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    return Book(
+      title: data['title'] ?? '',
+      rating: data['rating']?.toDouble() ?? 0.0,
+      price: data['price']?.toDouble()?? 0.0,
+      author: data['author'] ?? '',
+      image: data['image'] ?? '',
+      pages: data['pages'] ?? '',
+      description: data['description'] ?? '',
+      language: data['language'] ?? '',
+      publisher: data['publisher'] ?? '',
+      progress: data['progress']?.toDouble() ?? 0.0,
+      currentChapter: data['currentChapter'] ?? '',
+      lastRead: data['lastRead'] ?? '',
+    );
+  }
   Map<String, dynamic> toMap() {
     return {
       'title': title,

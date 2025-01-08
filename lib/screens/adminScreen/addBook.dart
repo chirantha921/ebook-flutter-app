@@ -174,7 +174,7 @@ class _AddBookState extends State<AddBook>{
             Icons.person_outline,
           ),
         ),
-        const SizedBox(height: 20.0),
+        const SizedBox(height: 70.0),
         ],
       ),
     )
