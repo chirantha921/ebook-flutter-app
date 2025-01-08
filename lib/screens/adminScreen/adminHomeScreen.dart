@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ebook_app/models/user.dart';
+import 'package:ebook_app/screens/adminScreen/allBooks.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -67,7 +68,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     // index 0: Main home content
     const AddBook(),
     // index 1: Explore - Changed from DiscoverScreen
-    const PurchasedScreen(),
+    const AllBooksScreen(),
     // index 3: Cart / Purchased
     const AccountScreen(),
     // index 4: Profile

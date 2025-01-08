@@ -9,20 +9,43 @@ class AllBooksScreen extends StatefulWidget {
   const AllBooksScreen({Key? key}) : super(key: key);
 
   @override
-  State<AllBooksScreen> createState() => _WishlistScreenState();
+  State<AllBooksScreen> createState() => _AllBookScreenState();
 }
 
-class _WishlistScreenState extends State<AllBooksScreen> {
-  // Sample wishlist data
+class _AllBookScreenState extends State<AllBooksScreen> {
   List<Book> allBooks = [];
 
+  Future<void> getAllBooks() async{
+    List<Book> allBook2 = [];
+    try{
+      CollectionReference bookCollection = FirebaseFirestore.instance.collection('Book');
+      QuerySnapshot querySnapshot = await bookCollection.get();
+      allBook2 = querySnapshot.docs.map((doc) => Book.fromFireStore(doc)).toList();
 
+      for(var book in allBook2){
+        print('book: ${book.title}, author: ${book.author}');
+        allBooks.add(book);
+      }
 
-  bool isLoadingWishListBooks = true;
+      setState(() {
+        allBooks = allBook2;
+        isLoadingBooks = false;
+      });
+    }
+    catch(e){
+      print('Error in fetching books $e');
+      setState(() {
+        isLoadingBooks = false;
+      });
+    }
+  }
+
+  bool isLoadingBooks = true;
   @override
   void initState() {
     super.initState();
     // Fetch the wishlist data from Firestore
+    getAllBooks();
   }
 
   void _showBookMenu(int index) async {
@@ -41,7 +64,7 @@ class _WishlistScreenState extends State<AllBooksScreen> {
               children: [
                 _buildBottomSheetAction(
                   icon: Icons.delete_outline,
-                  label: 'Remove from Wishlist',
+                  label: 'Remove from Book list',
                   onTap: () {
                     Navigator.pop(context, 'remove');
                   },
@@ -71,7 +94,7 @@ class _WishlistScreenState extends State<AllBooksScreen> {
 
     if (selectedAction == 'remove') {
       setState(() {
-        wishlistBooks.removeAt(index);
+        allBooks.removeAt(index);
       });
     } else if (selectedAction == 'share') {
       // Implement share logic
@@ -108,8 +131,6 @@ class _WishlistScreenState extends State<AllBooksScreen> {
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width > 800;
-    final appBarHeight = kToolbarHeight;
-
     return Scaffold(
       backgroundColor: Colors.white,
       // If you have a bottom nav bar in your main app, you can remove it here or integrate as needed.
@@ -123,7 +144,7 @@ class _WishlistScreenState extends State<AllBooksScreen> {
           child: Icon(Icons.menu_book, color: AppColors.primary, size: 28),
         ),
         title: Text(
-          'Wishlist',
+          'All Books',
           style: GoogleFonts.urbanist(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -147,16 +168,18 @@ class _WishlistScreenState extends State<AllBooksScreen> {
           SizedBox(width: isDesktop ? 24 : 16),
         ],
       ),
-      body: Padding(
+      body: isLoadingBooks
+      ? Center(child: CircularProgressIndicator()) : allBooks.isEmpty? Center(child: Text('No book has been added'))
+      :Padding(
         padding: EdgeInsets.symmetric(
           horizontal: isDesktop ? 24.0 : 16.0,
           vertical: isDesktop ? 24.0 : 16.0,
         ),
         child: ListView.separated(
-          itemCount: wishlistBooks.length,
+          itemCount: allBooks.length,
           separatorBuilder: (context, index) => const SizedBox(height: 24),
           itemBuilder: (context, index) {
-            final book = wishlistBooks[index];
+            final book = allBooks[index];
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
