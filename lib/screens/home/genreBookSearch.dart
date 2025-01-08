@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../models/book.dart';
+import '../book/book_details_screen.dart';
 
 class BookByGenreScreen extends StatelessWidget{
   final String genre;
@@ -34,7 +35,29 @@ class BookByGenreScreen extends StatelessWidget{
               separatorBuilder: (context, index) => const SizedBox(height: 24),
               itemBuilder: (context, index) {
                 final book = books[index];
-                return Row(
+                return GestureDetector(
+                  onTap: (){
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => BookDetailsScreen(
+                          book:{
+                            'title': book.title,
+                            'author': book.author,
+                            'imageUrl': book.image,
+                            'rating': book.rating,
+                            'reviewCount': book.reviews,
+                            'description': book.description,
+                            'genre': book.genre,
+                            'publisher': book.publisher,
+                            'language': book.language,
+                            'pages': book.pages,
+                            'releaseDate': book.releaseDate,
+                          }
+                      )
+                      )
+                    );
+                  },
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ClipRRect(
@@ -94,6 +117,7 @@ class BookByGenreScreen extends StatelessWidget{
                       ),
                     ),
                   ],
+                ),
                 );
               },
             );

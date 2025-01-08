@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../../utils/constants.dart'; // Update import path as needed
 import 'package:ebook_app/models/book.dart';
 
+import '../book/book_details_screen.dart';
+
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({Key? key}) : super(key: key);
 
@@ -49,6 +51,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
               // Creating the book object based on the data fetched from user's wishlist
               final book = Book(
+                bookId: bookRef.id,
                 title: bookData['title'] ?? 'Unknown Title',
                 rating: bookData['rating'] ?? 0,
                 price: bookData['price'],
@@ -152,14 +155,89 @@ class _WishlistScreenState extends State<WishlistScreen> {
     );
 
     if (selectedAction == 'remove') {
+      final bookRemove = wishlistBooks[index];
+
+      try{
+        final userDoc = firebase_auth.FirebaseAuth.instance.currentUser?.uid;
+        if(userDoc == null){
+          print("The user need to be signed in to remove the book from the wishlist");
+          return;
+        }
+
+        final bookRef = FirebaseFirestore.instance.collection('Book').doc(bookRemove.bookId);
+
+        final userDocRef = FirebaseFirestore.instance.collection('User').doc(userDoc);
+        await userDocRef.update({
+          'wishListBooks' : FieldValue.arrayRemove([bookRef])
+        });
+      }catch(e){
+        print("Error while removing book from wishListBooks in user $e");
+      }
       setState(() {
         wishlistBooks.removeAt(index);
       });
     } else if (selectedAction == 'share') {
       // Implement share logic
     } else if (selectedAction == 'about') {
+      final Book book = wishlistBooks[index];
       // Implement about logic
+      Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => BookDetailsScreen(
+              book:{
+                'title': book.title,
+                'author': book.author,
+                'imageUrl': book.image,
+                'rating': book.rating,
+                'reviewCount': book.reviews,
+                'description': book.description,
+                'genre': book.genre,
+                'publisher': book.publisher,
+                'language': book.language,
+                'pages': book.pages,
+                'releaseDate': book.releaseDate,
+              }
+          )
+          )
+      );
     }
+  }
+
+  void _showAboutBook(String description) async {
+    final selectedAction = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildSectionTitle("About the Book"),
+                TextFormField(
+                  initialValue: description,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: GoogleFonts.urbanist(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Colors.black87,
+      ),
+    );
   }
 
   Widget _buildBottomSheetAction({
