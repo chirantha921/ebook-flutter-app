@@ -1,11 +1,14 @@
 // lib/services/firebase_service.dart
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ebook_app/models/book.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  final CollectionReference booksCollection = FirebaseFirestore.instance.collection('Book');
+
 
   // Firestore methods
   Future<DocumentSnapshot<Map<String, dynamic>>> getDocument(String collection, String documentId) async {
@@ -76,6 +79,11 @@ class FirebaseService {
     } catch (e) {
       throw FirebaseException('Failed to delete file: $e');
     }
+  }
+
+  Future<List<Book>> searchBooksByTitle(String title)async{
+    final snapshot = await booksCollection.where('title',isGreaterThanOrEqualTo: title).where('title',isLessThanOrEqualTo: title+'\uf8ff').get();
+    return snapshot.docs.map((doc) => Book.fromFireStore(doc)).toList();
   }
 }
 

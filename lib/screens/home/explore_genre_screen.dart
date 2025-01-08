@@ -1,4 +1,5 @@
 import 'package:ebook_app/screens/home/genreBookSearch.dart';
+import 'package:ebook_app/screens/home/searchBookScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../utils/constants.dart';
@@ -128,6 +129,10 @@ class ExploreGenreScreen extends StatelessWidget {
                 icon: const Icon(Icons.search),
                 color: Colors.black87,
                 onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => BookSearchScreen()),
+                  );
                   // Implement search action
                 },
               ),
