@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class Book {
+  String bookId;
   final String title;
   final double rating;
   final double? price; // Make price optional
@@ -26,6 +27,7 @@ class Book {
   Book({
     required this.title,
     required this.rating,
+    this.bookId = '',
     this.price, // Remove required keyword
     this.author = 'Unknown',
     this.description = 'No description available',
@@ -60,6 +62,7 @@ class Book {
   factory Book.fromFireStore(DocumentSnapshot doc){
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return Book(
+      bookId: doc.id,
       title: data['title'] ?? '',
       rating: data['rating']?.toDouble() ?? 0.0,
       price: data['price']?.toDouble()?? 0.0,

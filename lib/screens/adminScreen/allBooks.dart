@@ -94,6 +94,7 @@ class _AllBookScreenState extends State<AllBooksScreen> {
 
     if (selectedAction == 'remove') {
       setState(() {
+        deleteBook(allBooks[index].bookId);
         allBooks.removeAt(index);
       });
     } else if (selectedAction == 'share') {
@@ -249,5 +250,14 @@ class _AllBookScreenState extends State<AllBooksScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> deleteBook(String bookID)async {
+    try{
+      await FirebaseFirestore.instance.collection('Book').doc(bookID).delete();
+      print('Book with $bookID deleted');
+    }catch(e){
+      print('error in deleting book $e');
+    }
   }
 }
