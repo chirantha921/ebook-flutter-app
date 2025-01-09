@@ -17,6 +17,7 @@ import 'screens/onboarding/splash_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Create global service instances
 final authService = AuthService();
@@ -32,6 +33,11 @@ Future<void> main() async {
     print('Firebase initialized successfully');
   });
 
+   //  Firestore offline persistence
+  FirebaseFirestore.instance.settings = Settings(
+    persistenceEnabled: true,
+  );
+  
   // Configure Firebase Storage to handle large files
   FirebaseStorage.instance.setMaxUploadRetryTime(const Duration(seconds: 30));
   FirebaseStorage.instance
