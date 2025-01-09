@@ -39,6 +39,7 @@ class AdminCustomBottomNavigationBar extends StatelessWidget {
         children: [
           _buildNavItem(0, Icons.home_rounded, 'Home'),
           _buildNavItem(1, Icons.add_box, 'Add Books'),
+          _buildNavItem(4, Icons.explore_outlined, 'Explore'),
           _buildNavItem(2, Icons.book, 'All Books'),
           _buildNavItem(3, Icons.perm_identity, 'Account')
         ],

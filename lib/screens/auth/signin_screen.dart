@@ -72,6 +72,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   String _getErrorMessage(dynamic error) {
     if (error is FirebaseAuthException) {
+      print("the error: $error.code");
       switch (error.code) {
         case 'user-not-found':
           return 'No user found with this email address.';

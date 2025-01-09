@@ -72,6 +72,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     // index 3: Cart / Purchased
     const AccountScreen(),
     // index 4: Profile
+    const ExploreGenreScreen(),
   ];
 
   void _onBottomNavTapped(int index) {
@@ -656,8 +657,6 @@ class _AdminHomeContentState extends State<AdminHomeContent> {
 
   @override
   Widget build(BuildContext context) {
-    print("Building widget with purchasedBooks length: ${purchasedBooks.length}");
-    print("Building widget with wishlistBooks length: ${wishlistBooks.length}");
     final isDesktopView = isDesktop(context);
 
     return NotificationListener<ScrollNotification>(
@@ -693,22 +692,6 @@ class _AdminHomeContentState extends State<AdminHomeContent> {
                 SizedBox(height: isDesktopView ? 32 : 24),
                 _buildGenreSection(context, isDesktopView),
                 SizedBox(height: isDesktopView ? 32 : 24),
-                _buildBookSection(
-                  context,
-                  "On Your Purchased",
-                  purchasedBooks,
-                  showPurchased: true,
-                  showRating: true,
-                  isDesktopView: isDesktopView,
-                ),
-                SizedBox(height: isDesktopView ? 32 : 24),
-                _buildBookSection(
-                  context,
-                  "On Your Wishlist",
-                  wishlistBooks,
-                  showRating: true,
-                  isDesktopView: isDesktopView,
-                ),
                 const SizedBox(height: 24),
               ]),
             ),

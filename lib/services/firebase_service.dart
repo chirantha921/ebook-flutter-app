@@ -1,8 +1,10 @@
 // lib/services/firebase_service.dart
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ebook_app/main.dart';
 import 'package:ebook_app/models/book.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -84,6 +86,19 @@ class FirebaseService {
   Future<List<Book>> searchBooksByTitle(String title)async{
     final snapshot = await booksCollection.where('title',isGreaterThanOrEqualTo: title).where('title',isLessThanOrEqualTo: title+'\uf8ff').get();
     return snapshot.docs.map((doc) => Book.fromFireStore(doc)).toList();
+  }
+
+  Future<void> purchaseBook(Book book)async{
+    final userDoc = firebase_auth.FirebaseAuth.instance.currentUser?.uid;
+    try{
+      final userRef = _firestore.collection('User').doc(userDoc).update({
+        'purchasedBooks': purchasedBooks.map((book) => book.toMap()).toList(),
+      });
+
+    }catch(e){
+      print("Error adding books to purchased list: $e");
+      throw Exception("Failed to add book to purchase list");
+    }
   }
 }
 
